@@ -6,6 +6,9 @@ import(
 	"config"
 	"fmt"
 	"logger"
+	"strconv"
+	"encoding/json"
+	"reflect"
 )
 
 type DetectionAgent struct {
@@ -13,9 +16,21 @@ type DetectionAgent struct {
 	c *httpclient.HClient
 }
 
-type Error struct {
-	Code int
+type Result struct {
+	ErrCode int
 	Message string
+	Index int
+	Data interface{}
+}
+
+func(da *DetectionAgent) log(message string) {
+	prefix := "RAIDA" + strconv.Itoa(da.index)
+	logger.Debug(prefix + " " + message)
+}
+
+func(da *DetectionAgent) logError(message string) {
+	prefix := "RAIDA" + strconv.Itoa(da.index)
+	logger.Error(prefix + " " + message)
 }
 
 func NewDetectionAgent(index int) *DetectionAgent {
@@ -26,15 +41,33 @@ func NewDetectionAgent(index int) *DetectionAgent {
 	}
 }
 
-func (da *DetectionAgent) DoRequest(url string) (string, *Error) {
-	fmt.Println("hhh\n")
-
+func (da *DetectionAgent) SendRequest(url string, done chan Result, t reflect.Type) {
+	result := &Result{}
 	if response, err := da.c.Send(url); err != nil {
-		logger.Error("Failed to send request: " + err.Message)
+		da.logError("Failed to send request: " + err.Message)
+		result.Message = err.Message
+		if (err.Code == httpclient.ERR_TIMEOUT) {
+			result.ErrCode = config.REMOTE_RESULT_ERROR_TIMEOUT
+		} else {
+			result.ErrCode = config.REMOTE_RESULT_ERROR_COMMON
+		}
 	} else {
+		da.log("Response received")
+		da.log(response)
+		result.Message = response
+		result.ErrCode = config.REMOTE_RESULT_ERROR_NONE
 
-	fmt.Println("r="+response)
+		data := reflect.New(t).Interface()
+		bytes := []byte(response)
+		if err := json.Unmarshal(bytes, &data); err != nil {
+			da.logError("Failed to parse JSON")
+			result.ErrCode = config.REMOTE_RESULT_ERROR_COMMON
+		} else {
+			result.Data = data
+		}
+
 	}
-	logger.Info("yyy")
-	return "xxx", &Error{1, "fuck"}
+
+	result.Index = da.index
+	done <-*result
 }

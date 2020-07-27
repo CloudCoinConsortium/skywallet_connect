@@ -8,6 +8,10 @@ import (
 
 
 func log(severity int, message string) {
+	if !config.CmdDebug {
+		return
+	}
+
 	var fmessage string
 
 	currentTime := time.Now()

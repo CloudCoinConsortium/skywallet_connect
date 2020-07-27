@@ -53,9 +53,7 @@ func (c *HClient) Send(nurl string) (string, *Error) {
 	u, _ := url.Parse(sendURL)
 	u.RawQuery = URLData.Encode()
 	Request := fmt.Sprintf("%v", u)
-	//create timeout response
-	body := "RAIDA 14 timed out." //set it as a fail to begin with
-
+	body := ""
 	var raidahttp = &http.Client{
 		Timeout: time.Duration(c.timeout) * time.Second,
 	}
@@ -74,7 +72,6 @@ func (c *HClient) Send(nurl string) (string, *Error) {
 			if (err.Timeout()) {
 				rerr.Code = ERR_TIMEOUT
 				rerr.Message = "Network Timeout"
-				fmt.Println("Timeout")
 			} else {
 				rerr.Code = ERR_NET
 				rerr.Message = "Network Error, " + err.Error()
@@ -99,7 +96,7 @@ func (c *HClient) Send(nurl string) (string, *Error) {
 	bodybytes, _ := ioutil.ReadAll(response.Body)
 	body = string(bodybytes)
 
-	c.log(body)
+	//c.log(body)
 
 	//fmt.Printf("err=%v %v\n",err, err.Error())
 	return  body, nil
