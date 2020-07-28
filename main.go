@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"raida"
-	"logger"
+	//"logger"
 	"flag"
 	"config"
 	"os"
@@ -37,7 +37,17 @@ func main() {
 	}
 
 	operation := flag.Arg(0)
-	if operation != "receive" {
+	if operation == "receive" {
+		uuid := flag.Arg(1)
+		r := raida.NewVerifier()
+		response, err := r.Receive(uuid)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err.Message)
+			os.Exit(1)
+		}
+
+		fmt.Println(response)
+	} else {
 		Usage()
 		os.Exit(1)
 	}
@@ -51,57 +61,8 @@ func main() {
 	}
 */
 
-	r := raida.NewVerifier()
 
-	response, err := r.Receive("222")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to Receive Coins")
-		os.Exit(1)
-	}
-
-	fmt.Println(response)
 
 	os.Exit(1)
 
-	/*
-	var i interface{}
-
-	i = "xxx"
-	i = 2
-	i = 3.2
-
-	r := i.(float64)
-	y := i.(string)
-
-	fmt.Println("x=", r)
-	fmt.Println("x=", y)
-
-	*/
-
-	//client := httpclient.New("https://raida14.cloudcoin.global")
-
-/*
-	da := raida.NewDetectionAgent(142)
-	if resp, err := da.DoRequest("/service/echo"); err != nil {
-		fmt.Println("error")
-	} else {
-
-		fmt.Println("r=", resp)
-		}
-	*/
-
-	
-	raida := raida.New()
-	logger.Info("xxx")
-
-	raida.SendRequest("/service/echo", nil)
-
-
-
-
-
-
-
-//	client.Send("/service/echo")
-	//httpclient.Send("ggg")
 }

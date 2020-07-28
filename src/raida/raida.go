@@ -45,14 +45,13 @@ type Common struct {
 	Time	string `json:"time"`
 }
 */
-func (r *RAIDA) SendRequest(url string, i interface{}) ([]Result) {
+func (r *RAIDA) SendRequest(url string, params map[string]string, i interface{}) ([]Result) {
 	logger.Info("Doing request " + url)
 
 	done := make(chan Result)
 	for _, agent := range r.DetectionAgents {
 			go func(agent DetectionAgent) {
-				//agent.SendRequest(url, done, reflect.TypeOf(Common{}))
-				agent.SendRequest(url, done, reflect.TypeOf(i))
+				agent.SendRequest(url, params, done, reflect.TypeOf(i))
 			}(agent)
 	}
 

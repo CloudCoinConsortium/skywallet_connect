@@ -41,14 +41,15 @@ func(c *HClient) log(message string) {
 	logger.Debug(prefix + " " + message)
 }
 
-func (c *HClient) Send(nurl string) (string, *Error) {
+func (c *HClient) Send(nurl string, params map[string]string) (string, *Error) {
 	sendURL := fmt.Sprintf("%s%s", c.baseUrl, nurl)
 	c.log("GET " + sendURL)
 
-	//create get request
 	URLData := url.Values{}
-	//URLData.Set("account", strconv.Itoa(account))
-	//URLData.Set("tag", tag)
+	for key, element := range params {
+		logger.Debug(key + ":" + element)
+		URLData.Set(key, element)
+	}
 
 	u, _ := url.Parse(sendURL)
 	u.RawQuery = URLData.Encode()

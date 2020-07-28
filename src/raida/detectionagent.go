@@ -41,9 +41,9 @@ func NewDetectionAgent(index int) *DetectionAgent {
 	}
 }
 
-func (da *DetectionAgent) SendRequest(url string, done chan Result, t reflect.Type) {
+func (da *DetectionAgent) SendRequest(url string, params map[string]string, done chan Result, t reflect.Type) {
 	result := &Result{}
-	if response, err := da.c.Send(url); err != nil {
+	if response, err := da.c.Send(url, params); err != nil {
 		da.logError("Failed to send request: " + err.Message)
 		result.Message = err.Message
 		if (err.Code == httpclient.ERR_TIMEOUT) {

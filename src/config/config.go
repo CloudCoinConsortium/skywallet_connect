@@ -1,7 +1,7 @@
 package config
 
 
-const DEFAULT_TIMEOUT = 1
+const DEFAULT_TIMEOUT = 5
 const DEFAULT_DOMAIN = "cloudcoin.global"
 
 
