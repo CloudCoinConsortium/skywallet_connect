@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"sort"
 	"regexp"
+	"cloudcoin"
 )
 
 type Verifier struct {
@@ -32,19 +33,27 @@ func NewVerifier() (*Verifier) {
 	}
 }
 
-func (v *Verifier) Receive(uuid string) (string, *Error) {
-	logger.Debug("Started Verifier with UUID " + uuid)
+func (v *Verifier) Receive(uuid string, owner string) (string, *Error) {
+	logger.Debug("Started Verifier with UUID " + uuid + " owner " + owner)
 
 	matched, err := regexp.MatchString(`^[A-Fa-f0-9]{32}$`, uuid)
 	if err != nil || !matched {
 		return "", &Error{"UUID invalid or not defined"}
 	}
 
+	sn, err := cloudcoin.GuessSNFromString(owner)
+	if (err != nil) {
+		return "", &Error{"Invalid Owner"}
+	}
+
+	logger.Debug("owner SN " +  strconv.Itoa(sn))
+
 	pownArray := make([]int, v.Raida.TotalServers())
 	balances := make(map[int]int)
 
 	params := make(map[string]string)
 	params["tag"] = uuid
+	params["owner"] = strconv.Itoa(sn)
 
 	results := v.Raida.SendRequest("/service/view_receipt", params, VerifierResponse{})
   for idx, result := range results {

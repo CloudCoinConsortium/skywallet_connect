@@ -39,8 +39,13 @@ func main() {
 	operation := flag.Arg(0)
 	if operation == "receive" {
 		uuid := flag.Arg(1)
+		owner := flag.Arg(2)
+		if (owner == "") {
+			fmt.Fprintf(os.Stderr, "Receive requires two arguments: guid and owner\n")
+			os.Exit(1)
+		}
 		r := raida.NewVerifier()
-		response, err := r.Receive(uuid)
+		response, err := r.Receive(uuid, owner)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err.Message)
 			os.Exit(1)
