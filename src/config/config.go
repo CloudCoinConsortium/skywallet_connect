@@ -14,11 +14,13 @@ const REMOTE_RESULT_ERROR_NONE = 0
 const REMOTE_RESULT_ERROR_TIMEOUT = 1
 const REMOTE_RESULT_ERROR_COMMON = 2
 
+const DEFAULT_NN = 1
 
 var CmdDebug bool
 var CmdHelp bool
 var CmdCommand string
 
+const TOTAL_RAIDA_NUMBER = 25
 
 const (
 	RAIDA_STATUS_UNTRIED = 0
@@ -27,3 +29,8 @@ const (
 	RAIDA_STATUS_FAIL = 3
 	RAIDA_STATUS_NORESPONSE = 4
 )
+
+
+const TOPDIR = "CloudCoinStorage"
+
+const DIR_ID = "ID"

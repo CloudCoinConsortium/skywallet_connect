@@ -7,13 +7,14 @@ import (
 	"flag"
 	"config"
 	"os"
+	"core"
 )
 
 func Usage() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "%s [-debug] <operation> <args>\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "%s [-help]\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\n<operation> is one of 'receive|send'\n")
+		fmt.Fprintf(os.Stderr, "\n<operation> is one of 'receive|transfer'\n")
 		fmt.Fprintf(os.Stderr, "<args> arguments for operation\n\n")
 		flag.PrintDefaults()
 }
@@ -36,6 +37,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	core.MkDirs()
+
 	operation := flag.Arg(0)
 	if operation == "receive" {
 		uuid := flag.Arg(1)
@@ -52,6 +55,21 @@ func main() {
 		}
 
 		fmt.Println(response)
+	} else if operation == "transfer" {
+		amount, to, memo := flag.Arg(1), flag.Arg(2), flag.Arg(3)
+		if (amount == "" || to == "") {
+			fmt.Fprintf(os.Stderr, "Amount and To parameters required: %s transfer 250 destination.skywallet.cc memo\n", os.Args[0])
+			os.Exit(1)
+		}
+
+		t := raida.NewTransfer()
+		response, err := t.Transfer(amount, to, memo)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err.Message)
+			os.Exit(1)
+		}
+		fmt.Println(response)
+
 	} else {
 		Usage()
 		os.Exit(1)

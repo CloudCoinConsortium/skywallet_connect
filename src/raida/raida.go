@@ -6,11 +6,11 @@ import (
 //	"fmt"
 	"reflect"
 	"math"
+	"config"
 //	"config"
 //	"time"
 )
 
-const TOTAL_RAIDA_NUMBER = 25
 
 type RAIDA struct {
 	TotalNumber int
@@ -21,18 +21,18 @@ type RAIDA struct {
 
 
 func New() *RAIDA {
-	DetectionAgents := make([]DetectionAgent, TOTAL_RAIDA_NUMBER)
+	DetectionAgents := make([]DetectionAgent, config.TOTAL_RAIDA_NUMBER)
 	for idx, _ := range DetectionAgents {
 		DetectionAgents[idx] = *NewDetectionAgent(idx)
 	}
 
-	sideSize := int(math.Sqrt(TOTAL_RAIDA_NUMBER))
-	if sideSize * sideSize != TOTAL_RAIDA_NUMBER {
+	sideSize := int(math.Sqrt(config.TOTAL_RAIDA_NUMBER))
+	if sideSize * sideSize != config.TOTAL_RAIDA_NUMBER {
 		panic("Invalid RAIDA Configuration")
 	}
 
 	return &RAIDA {
-		TotalNumber: TOTAL_RAIDA_NUMBER,
+		TotalNumber: config.TOTAL_RAIDA_NUMBER,
 		DetectionAgents: DetectionAgents,
 		SideSize: sideSize,
 	}
@@ -86,3 +86,4 @@ func (r *RAIDA) TotalServers() int {
 func (r *RAIDA) GetSideSize() int {
 	return r.SideSize
 }
+
