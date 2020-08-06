@@ -7,6 +7,8 @@ import (
 //	"encoding/json"
 //	"regexp"
 	"cloudcoin"
+	"error"
+	"fmt"
 )
 
 type Transfer struct {
@@ -17,9 +19,7 @@ type TransferResponse struct {
   Server  string `json:"server"`
 	Version string `json:"version"`
 	Time  string `json:"time"`
-	TotalReceived int `json:"total_received"`
 	Message string `json:"message"`
-	SerialNumbers string `json:"serial_numbers"`
 }
 
 type TransferOutput struct {
@@ -32,36 +32,49 @@ func NewTransfer() (*Transfer) {
 	}
 }
 
-func (v *Transfer) Transfer(amount string, to string, memo string) (string, *Error) {
+func (v *Transfer) Transfer(cc *cloudcoin.CloudCoin, amount string, to string, memo string) (string, *error.Error) {
 	amountInt, err := strconv.Atoi(amount)
 	if err != nil {
-		return "", &Error{"Invalid amount"}
+		return "", &error.Error{"Invalid amount"}
 	}
 
 	if amountInt <= 0 {
-		return "", &Error{"Invalid amount"}
+		return "", &error.Error{"Invalid amount"}
 	}
 
 	sn, err2 := cloudcoin.GuessSNFromString(to)
 	if err2 != nil {
-		return "", &Error{"Invalid Destination Address"}
+		return "", &error.Error{"Invalid Destination Address"}
 	}
 
 	logger.Debug("Started Transfer " + amount + " to " + to + " (" + strconv.Itoa(sn) + ") memo " + memo)
 
+	s := NewShow()
+	sns, total, err3 := s.Show(cc)
+	if err3 != nil {
+		logger.Error(err3.Message)
+		return "", &error.Error{"Failed to Show Coins"}
+	}
+
+	if total < amountInt {
+		return "", &error.Error{"Insufficient funds"}
+	}
+
+	nsns, extra, err3 := v.PickCoinsFromArray(sns, amountInt)
+	if err3 != nil {
+		logger.Debug("Failed to pick coins: " + err3.Message)
+		return "", &error.Error{"Failed to pick coins: " + err3.Message}
+	}
+
+	if extra != 0 {
+		logger.Debug("Breaking extra coin: " + strconv.Itoa(extra))
+	}
+
+	fmt.Printf("v=%d %d %v\n",total, extra, nsns)
+	//results := v.Raida.SendRequest("/service/show", params, TransferResponse{})
+
 	return "xxx", nil
 	/*
-	matched, err := regexp.MatchString(`^[A-Fa-f0-9]{32}$`, uuid)
-	if err != nil || !matched {
-		return "", &Error{"UUID invalid or not defined"}
-	}
-
-	sn, err := cloudcoin.GuessSNFromString(owner)
-	if (err != nil) {
-		return "", &Error{"Invalid Owner"}
-	}
-
-	logger.Debug("owner SN " +  strconv.Itoa(sn))
 
 	pownArray := make([]int, v.Raida.TotalServers())
 	balances := make(map[int]int)

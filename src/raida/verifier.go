@@ -26,6 +26,8 @@ type VerifierResponse struct {
 
 type VerifierOutput struct {
 	AmountVerified int  `json:"amount_verified"`
+	Status string `json:"status"`
+	Message string `json:"message"`
 }
 
 func NewVerifier() (*Verifier) {
@@ -60,17 +62,18 @@ func (v *Verifier) Receive(uuid string, owner string) (string, *error.Error) {
   for idx, result := range results {
     if result.ErrCode == config.REMOTE_RESULT_ERROR_NONE {
       r := result.Data.(*VerifierResponse)
-			if (r.Message != "success") {
+			if (r.Message == "success") {
+				pownArray[idx] = config.RAIDA_STATUS_PASS
+				total := r.TotalReceived
+				balances[total]++
+				logger.Debug("raida " + strconv.Itoa(idx) + " total " + strconv.Itoa(total))
+			} else if (r.Message == "fail") {
 				pownArray[idx] = config.RAIDA_STATUS_FAIL
 				balances[0]++
 			} else {
-				pownArray[idx] = config.RAIDA_STATUS_PASS
-				total := r.TotalReceived
-
-				balances[total]++
-				logger.Debug("raida " + strconv.Itoa(idx) + " total " + strconv.Itoa(total))
+				pownArray[idx] = config.RAIDA_STATUS_ERROR
+				balances[0]++
 			}
-
     } else if (result.ErrCode == config.REMOTE_RESULT_ERROR_TIMEOUT) {
 			pownArray[idx] = config.RAIDA_STATUS_NORESPONSE
 			balances[0]++
@@ -115,6 +118,8 @@ func (v *Verifier) Receive(uuid string, owner string) (string, *error.Error) {
 
 	vo := &VerifierOutput{}
 	vo.AmountVerified = topBalance
+	vo.Status = "success"
+	vo.Message = "CloudCoins verified"
 
 	b, err := json.Marshal(vo); 
 	if err != nil {

@@ -86,7 +86,7 @@ func ValidateSN(sn int) bool {
 	return GetDenomination(sn) != 0
 }
 
-func ValidateCoin(cc CloudCoin) bool {
+func ValidateCoin(cc *CloudCoin) bool {
 	nn, err := strconv.Atoi(cc.Nn)
 	if err != nil {
 		return false

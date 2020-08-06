@@ -44,28 +44,33 @@ func main() {
 		uuid := flag.Arg(1)
 		owner := flag.Arg(2)
 		if (owner == "") {
-			fmt.Fprintf(os.Stderr, "Receive requires two arguments: guid and owner\n")
+			fmt.Printf("%s", core.JsonError("Receive requires two arguments: guid and owner"))
 			os.Exit(1)
 		}
 		r := raida.NewVerifier()
 		response, err := r.Receive(uuid, owner)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", err.Message)
+			fmt.Printf("%s", core.JsonError(err.Message))
 			os.Exit(1)
 		}
 
 		fmt.Println(response)
 	} else if operation == "transfer" {
 		amount, to, memo := flag.Arg(1), flag.Arg(2), flag.Arg(3)
+		cc, err := core.GetIDCoin()
+		if err != nil {
+			fmt.Printf("%s", core.JsonError("Failed to find ID coin"))
+			os.Exit(1)
+		}
 		if (amount == "" || to == "") {
-			fmt.Fprintf(os.Stderr, "Amount and To parameters required: %s transfer 250 destination.skywallet.cc memo\n", os.Args[0])
+			fmt.Printf("%s", core.JsonError("Amount and To parameters required: " + os.Args[0] + " transfer 250 destination.skywallet.cc memo"))
 			os.Exit(1)
 		}
 
 		t := raida.NewTransfer()
-		response, err := t.Transfer(amount, to, memo)
+		response, err := t.Transfer(cc, amount, to, memo)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", err.Message)
+			fmt.Printf("%s", core.JsonError(err.Message))
 			os.Exit(1)
 		}
 		fmt.Println(response)
@@ -86,6 +91,5 @@ func main() {
 
 
 
-	os.Exit(1)
-
+	os.Exit(0)
 }

@@ -8,7 +8,7 @@ Usage of ./raida_go on Linux Systems:
 ./raida_go [-debug] <operation> <args>
 ./raida_go [-help]
 
-<operation> is one of 'receive|send'
+<operation> is one of 'receive|transfer'
 <args> arguments for operation
 
   -debug
@@ -25,7 +25,7 @@ $ ./raida_go receive 080A4CE89126F4F1B93E4745F89F6713 merchant.mydomain.com
 ```
 Same Example in Windows:
 ```console
-C:/xampp/htdocs/cloudcoin/raida_go receive 080A4CE89126F4F1B93E4745F89F6713 merchant.mydomain.com
+C:\xampp\htdocs\cloudcoin\raida_go.exe receive 080A4CE89126F4F1B93E4745F89F6713 merchant.mydomain.com
 {"amount_verified":150}
 ```
 To see additional Debug Info:

@@ -45,6 +45,9 @@ type Common struct {
 	Time	string `json:"time"`
 }
 */
+
+
+
 func (r *RAIDA) SendRequest(url string, params map[string]string, i interface{}) ([]Result) {
 	logger.Info("Doing request " + url)
 
@@ -55,6 +58,30 @@ func (r *RAIDA) SendRequest(url string, params map[string]string, i interface{})
 			}(agent)
 	}
 
+	results := make([]Result, r.TotalNumber)
+	chanResults := make([]Result, r.TotalNumber)
+	for i := 0; i < r.TotalNumber; i++ {
+		chanResults[i] = <-done
+	}
+
+	logger.Info("Done request " + url)
+	for _, result := range chanResults {
+		results[result.Index] = result
+	}
+
+	return results
+}
+
+
+func (r *RAIDA) SendDefinedRequest(url string, params []map[string]string, i interface{}) ([]Result) {
+	logger.Info("Doing request " + url)
+
+	done := make(chan Result)
+	for idx, agent := range r.DetectionAgents {
+			go func(agent DetectionAgent, idx int) {
+				agent.SendRequest(url, params[idx], done, reflect.TypeOf(i))
+			}(agent, idx)
+	}
 
 	results := make([]Result, r.TotalNumber)
 	chanResults := make([]Result, r.TotalNumber)
@@ -65,16 +92,7 @@ func (r *RAIDA) SendRequest(url string, params map[string]string, i interface{})
 	logger.Info("Done request " + url)
 	for _, result := range chanResults {
 		results[result.Index] = result
-	//	fmt.Println("raida"+strconv.Itoa(idx) + "idx="+strconv.Itoa(result.Index) + " r="+result.Message)
 	}
-	/*
-	for idx, result := range results {
-		if result.ErrCode == config.REMOTE_RESULT_ERROR_NONE {
-			r := result.Data.(*Common)
-			fmt.Println("raida"+strconv.Itoa(idx) + " r="+result.Message + " cr="+strconv.Itoa(result.ErrCode) + " srv="+r.Server)
-		}
-	}
-	*/
 
 	return results
 }

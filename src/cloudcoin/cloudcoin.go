@@ -6,7 +6,7 @@ import (
 //	"encoding/json"
 //	"os"
 //	"io/ioutil"
-//	"strconv"
+	"strconv"
 //"config"
 //	"error"
 )
@@ -38,10 +38,19 @@ func New(path string) *CloudCoin {
 	}
 
 	cc := ccStack.Stack[0]
-	if !ValidateCoin(cc) {
+	if !ValidateCoin(&cc) {
 		logger.Error("Coin is corrupted")
 		return nil
 	}
 
 	return &cc
+}
+
+func (cc *CloudCoin) GetDenomination() int {
+	snInt, err := strconv.Atoi(cc.Sn)
+	if err != nil {
+		return 0
+	}
+
+	return GetDenomination(snInt)
 }

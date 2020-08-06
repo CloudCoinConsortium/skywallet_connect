@@ -9,6 +9,7 @@ import (
 	"cloudcoin"
 	"io/ioutil"
 	"error"
+	"fmt"
 )
 
 
@@ -58,9 +59,6 @@ func MkDir(path string) {
 	}
 
 	logger.Debug("Created folder " + path)
-
-
-	
 }
 
 
@@ -95,5 +93,11 @@ func GetIDCoin() (*cloudcoin.CloudCoin, *error.Error) {
 	}
 
 	return cc, nil
+}
+
+func JsonError(txt string) string {
+	var str = fmt.Sprintf("{\"status\":\"fail\", \"message\":\"%s\"}", txt)
+
+	return str
 }
 
