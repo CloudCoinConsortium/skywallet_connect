@@ -11,6 +11,8 @@ import (
 	"os"
 	"io/ioutil"
 	"config"
+	"crypto/rand"
+	"encoding/hex"
 )
 
 func GuessSNFromString(param string) (int, *error.Error) {
@@ -174,3 +176,167 @@ func ReadFromFile(fname string) (*CloudCoinStack, *error.Error) {
 
 	return &ccStack, nil
 }
+
+func GetChangeMethod(denomination int) int {
+	method := 0
+	switch (denomination) {
+	case 250:
+		method = config.CHANGE_METHOD_250F;
+		break;
+	case 100:
+		method = config.CHANGE_METHOD_100E;
+		break;
+	case 25:
+		method = config.CHANGE_METHOD_25B;
+		break;
+	case 5:
+		method = config.CHANGE_METHOD_5A;
+		break;
+	}
+  return method
+}
+
+func CoinsGetA (a []int, cnt int) []int {
+	var sns []int
+	var i, j int
+
+	sns = make([]int, cnt)
+
+	i = 0
+	j = 0
+	for ; i < len(a); i++ {
+		if a[i] == 0 {
+			continue
+		}
+
+		sns[j] = a[i]
+		a[i] = 0
+		j++
+
+		if j == cnt {
+			break
+		}
+	}
+
+	if j != cnt {
+		return nil
+	}
+
+  return sns;
+}
+
+func CoinsGet25B (sb, ss []int) []int {
+	var sns, rsns []int
+
+	rsns = make([]int, 9)
+	sns = CoinsGetA(ss, 5)
+	if sns == nil {
+		return nil
+	}
+
+	for i := 0; i < 5; i++ {
+		rsns[i] = sns[i]
+	}
+
+	sns = CoinsGetA(sb, 4)
+	if sns == nil {
+		return nil
+	}
+
+	for i := 0; i < 4; i++ {
+		rsns[i + 5] = sns[i]
+	}
+
+	return rsns
+}
+
+func CoinsGet100E(sb, ss, sss []int) []int {
+	var sns, rsns []int
+
+	rsns = make([]int, 12)
+	sns = CoinsGetA(sb, 3)
+	if sns == nil {
+		return nil
+	}
+
+	for i := 0; i < 3; i++ {
+		rsns[i] = sns[i]
+	}
+
+	sns = CoinsGetA(ss, 4)
+	if sns == nil {
+		return nil
+	}
+
+	for i := 0; i < 4; i++ {
+		rsns[i + 3] = sns[i]
+	}
+
+	sns = CoinsGetA(sss, 5)
+	if sns == nil {
+		return nil
+	}
+
+	for i := 0; i < 5; i++ {
+		rsns[i + 7] = sns[i]
+	}
+
+	return rsns
+}
+
+func CoinsGet250F(sb, ss, sss, ssss []int) []int {
+	var sns, rsns []int
+
+	rsns = make([]int, 15)
+	sns = CoinsGetA(sb, 1)
+	if sns == nil {
+		return nil
+	}
+
+	rsns[0] = sns[0]
+
+	sns = CoinsGetA(ss, 5)
+	if sns == nil {
+		return nil
+	}
+
+	for i := 0; i < 5; i++ {
+		rsns[i + 1] = sns[i]
+	}
+
+	sns = CoinsGetA(sss, 4)
+	if sns == nil {
+		return nil
+	}
+
+	for i := 0; i < 4; i++ {
+		rsns[i + 6] = sns[i]
+	}
+
+	sns = CoinsGetA(ssss, 5)
+	if sns == nil {
+		return nil
+	}
+
+	for i := 0; i < 5; i++ {
+		rsns[i + 10] = sns[i]
+	}
+
+	return rsns;
+}
+
+
+func GeneratePan() (string, *error.Error) {
+	return GenerateHex(16)
+}
+
+func GenerateHex(length int) (string, *error.Error) {
+	bytes := make([]byte, length)
+
+	if _, err := rand.Read(bytes); err != nil {
+		return "", &error.Error{"Failed to generate random string"}
+	}
+
+	return hex.EncodeToString(bytes), nil
+}
+

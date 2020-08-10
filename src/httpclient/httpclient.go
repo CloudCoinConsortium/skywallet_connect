@@ -10,6 +10,8 @@ import (
 	"time"
 	"config"
 	"logger"
+	"strings"
+	"encoding/json"
 )
 
 const ERR_TIMEOUT = 1
@@ -28,6 +30,10 @@ type Error struct {
 	Message string
 }
 
+type Result struct {
+
+}
+
 func New(url string, index int) *HClient {
 	return &HClient{
 		baseUrl: url,
@@ -41,19 +47,46 @@ func(c *HClient) log(message string) {
 	logger.Debug(prefix + " " + message)
 }
 
-func (c *HClient) Send(nurl string, params map[string]string) (string, *Error) {
+func (c *HClient) Send(nurl string, params map[string]string, doneIssued chan bool, post bool) (string, *Error) {
 	sendURL := fmt.Sprintf("%s%s", c.baseUrl, nurl)
-	c.log("GET " + sendURL)
 
+	if (post) {
+		c.log("POST " + sendURL)
+	} else {
+		c.log("GET " + sendURL)
+	}
+
+	var Request string
 	URLData := url.Values{}
 	for key, element := range params {
 		logger.Debug(key + ":" + element)
-		URLData.Set(key, element)
+
+		if (strings.Contains(key, "[]")) {
+			var ba []string
+			err := json.Unmarshal([]byte(element), &ba)
+			if err != nil {
+				logger.Error("Failed to exract bytes from URL parameter: " + element)
+				return "", &Error{
+					Code : ERR_COMMON,
+					Message : "Internal Error",
+				}
+			}
+			for _, p := range ba {
+				URLData.Add(key, p)
+			}
+		} else {
+			URLData.Set(key, element)
+		}
 	}
 
-	u, _ := url.Parse(sendURL)
-	u.RawQuery = URLData.Encode()
-	Request := fmt.Sprintf("%v", u)
+	if (post) {
+
+	} else {
+		u, _ := url.Parse(sendURL)
+		u.RawQuery = URLData.Encode()
+		Request = fmt.Sprintf("%v", u)
+	}
+
 	body := ""
 	var raidahttp = &http.Client{
 		Timeout: time.Duration(c.timeout) * time.Second,
@@ -61,7 +94,25 @@ func (c *HClient) Send(nurl string, params map[string]string) (string, *Error) {
 
 	//send request
 	beforeSeconds := time.Now()
-	response, err := raidahttp.Get(Request)
+
+	logger.Debug(Request)
+	if doneIssued != nil {
+		logger.Debug("Doing async request")
+		go func() {
+			raidahttp.Get(Request)
+		}()
+
+		doneIssued <-true
+		return "", nil
+	}
+
+	var response *http.Response
+	var err error
+	if (post) {
+		response, err = raidahttp.PostForm(sendURL, URLData)
+	} else {
+		response, err = raidahttp.Get(Request)
+	}
 	elapsedSeconds := time.Since(beforeSeconds).Nanoseconds() / 1000000
 
 	c.log("Total time: " + strconv.Itoa(int(elapsedSeconds)) + " ms")

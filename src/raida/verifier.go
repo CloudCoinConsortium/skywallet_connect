@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"cloudcoin"
 	"error"
+	"strings"
 )
 
 type Verifier struct {
@@ -54,9 +55,13 @@ func (v *Verifier) Receive(uuid string, owner string) (string, *error.Error) {
 	pownArray := make([]int, v.Raida.TotalServers())
 	balances := make(map[int]int)
 
+	allSns := make(map[int]bool)
+
 	params := make(map[string]string)
 	params["tag"] = uuid
 	params["owner"] = strconv.Itoa(sn)
+
+	fArr := make([]map[int]bool, v.Raida.TotalServers())
 
 	results := v.Raida.SendRequest("/service/view_receipt", params, VerifierResponse{})
   for idx, result := range results {
@@ -67,6 +72,19 @@ func (v *Verifier) Receive(uuid string, owner string) (string, *error.Error) {
 				total := r.TotalReceived
 				balances[total]++
 				logger.Debug("raida " + strconv.Itoa(idx) + " total " + strconv.Itoa(total))
+
+				snsString := r.SerialNumbers
+				sns := strings.Split(snsString, ",")
+				fArr[idx] = make(map[int]bool)
+
+				for _, ssn := range sns {
+					issn, err := strconv.Atoi(ssn)
+					if err != nil {
+						continue
+					}
+					fArr[idx][issn] = true
+					allSns[issn] = true
+				}
 			} else if (r.Message == "fail") {
 				pownArray[idx] = config.RAIDA_STATUS_FAIL
 				balances[0]++
@@ -99,16 +117,11 @@ func (v *Verifier) Receive(uuid string, owner string) (string, *error.Error) {
 		total := r.TotalReceived
 		if (total != topBalance) {
 			pownArray[idx] = config.RAIDA_STATUS_UNTRIED
-			logger.Debug("Raida " + strconv.Itoa(topBalance) + " is reporting incorrect balance. Skipping it")
+			logger.Debug("Raida " + strconv.Itoa(idx) + " is reporting incorrect balance (" + strconv.Itoa(total) + "). Skipping it")
 			continue
 		}
 	}
 
-/*
-	for key, element := range balances {
-		fmt.Printf("k=%d v=%d\n", key, element)
-	}
-*/
 	pownString := v.GetPownStringFromStatusArray(pownArray)
 	logger.Debug("Pownstring " + pownString)
 
@@ -120,6 +133,19 @@ func (v *Verifier) Receive(uuid string, owner string) (string, *error.Error) {
 	vo.AmountVerified = topBalance
 	vo.Status = "success"
 	vo.Message = "CloudCoins verified"
+
+	// Getting Sns for fixing
+	ft := NewFixTransfer()
+	for ssn, _ := range allSns {
+		for ridx, farr := range fArr {
+			if _, ok := farr[ssn]; !ok {
+				logger.Debug("Coin " + strconv.Itoa(ssn) + " will be fixed on raida " + strconv.Itoa(ridx))
+				ft.AddSNToRepairArray(ridx, ssn)
+			}
+		}
+	}
+
+	ft.FixTransfer()
 
 	b, err := json.Marshal(vo); 
 	if err != nil {

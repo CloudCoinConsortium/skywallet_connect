@@ -12,6 +12,7 @@ import(
 
 type Servant struct {
 	Raida *RAIDA
+	repairArray [][]int
 }
 
 type Error struct {
@@ -23,8 +24,14 @@ func NewServant() (*Servant) {
 	Raida := New()
 	logger.Info("Raida initialized. Total Servers "  + strconv.Itoa(Raida.TotalServers()))
 
+	repairArray := make([][]int, Raida.TotalServers())
+	//repairArray[5] = append(repairArray[5], 10)
+	//repairArray[5] = append(repairArray[5], 20)
+	//fmt.Printf("r=%d\n",repairArray[5])
+
 	return &Servant{
 		Raida: Raida,
+		repairArray: repairArray,
 	}
 
 }
@@ -335,35 +342,6 @@ func (s *Servant) GetExpCoins(sns []int, amount int) (map[int]int, *error.Error)
 	return rv, nil
 }
 
-/*
-
-
-public int[] countCoinsFromArray(int[] coins) {
-        int[] totals = new int[6];
-        CloudCoin cc;
-        int denomination;
-
-        for (int i = 0; i < coins.length; i++) {
-            cc = new CloudCoin(Config.DEFAULT_NN, coins[i]);
-
-            denomination = cc.getDenomination();
-            if (denomination == 1)
-                totals[Config.IDX_1]++;
-            else if (denomination == 5)
-                totals[Config.IDX_5]++;
-            else if (denomination == 25)
-                totals[Config.IDX_25]++;
-            else if (denomination == 100)
-                totals[Config.IDX_100]++;
-            else if (denomination == 250)
-                totals[Config.IDX_250]++;
-            else
-                continue;
-
-            totals[Config.IDX_TOTAL] += denomination;
-        }
-
-        return totals;
-    }
-*/
-
+func (s *Servant) AddSNToRepairArray(raidaIdx int, sn int) {
+	s.repairArray[raidaIdx] = append(s.repairArray[raidaIdx], sn)
+}

@@ -2,13 +2,13 @@ package raida
 
 import (
 	"logger"
-//	"config"
+	"config"
 	"strconv"
-//	"encoding/json"
+	"encoding/json"
 //	"regexp"
 	"cloudcoin"
 	"error"
-	"fmt"
+//	"fmt"
 )
 
 type Transfer struct {
@@ -24,6 +24,8 @@ type TransferResponse struct {
 
 type TransferOutput struct {
 	AmountSent int  `json:"amount_sent"`
+	Message string
+	Status string
 }
 
 func NewTransfer() (*Transfer) {
@@ -42,12 +44,12 @@ func (v *Transfer) Transfer(cc *cloudcoin.CloudCoin, amount string, to string, m
 		return "", &error.Error{"Invalid amount"}
 	}
 
-	sn, err2 := cloudcoin.GuessSNFromString(to)
+	to_sn, err2 := cloudcoin.GuessSNFromString(to)
 	if err2 != nil {
 		return "", &error.Error{"Invalid Destination Address"}
 	}
 
-	logger.Debug("Started Transfer " + amount + " to " + to + " (" + strconv.Itoa(sn) + ") memo " + memo)
+	logger.Debug("Started Transfer " + amount + " to " + to + " (" + strconv.Itoa(to_sn) + ") memo " + memo)
 
 	s := NewShow()
 	sns, total, err3 := s.Show(cc)
@@ -68,12 +70,134 @@ func (v *Transfer) Transfer(cc *cloudcoin.CloudCoin, amount string, to string, m
 
 	if extra != 0 {
 		logger.Debug("Breaking extra coin: " + strconv.Itoa(extra))
+		b := NewBreakInBank()
+		csns, err := b.BreakInBank(cc, extra)
+		if err != nil {
+			return "", err
+		}
+/*
+		for i := 0; i < len(nsns); i++ {
+			fmt.Printf("vx0=%d %d\n",nsns[i],cloudcoin.GetDenomination(nsns[i]))
+		}
+
+		for i := 0; i < len(csns); i++ {
+			fmt.Printf("vx1=%d %d\n",csns[i],cloudcoin.GetDenomination(csns[i]))
+		}
+
+		vsns := append(nsns, csns...)
+		for i := 0; i < len(vsns); i++ {
+			fmt.Printf("vx=%d %d\n",vsns[i],cloudcoin.GetDenomination(vsns[i]))
+		}
+*/
+		vsns := append(nsns, csns...)
+		var err4 *error.Error
+		nsns, extra, err4 = v.PickCoinsFromArray(vsns, amountInt)
+		if err4 != nil || extra != 0 {
+			logger.Debug("Failed to pick coins after change: " + err4.Message)
+			return "", &error.Error{"Failed to pick coins after change: " + err4.Message}
+		}
+
+	//	for i := 0; i < len(nsns); i++ {
+	//		fmt.Printf("vxall=%d %d\n",nsns[i],cloudcoin.GetDenomination(nsns[i]))
+	//	}
 	}
 
-	fmt.Printf("v=%d %d %v\n",total, extra, nsns)
+	for _, sn := range nsns {
+		logger.Debug("Sending " + strconv.Itoa(sn) + " d:" + strconv.Itoa(cloudcoin.GetDenomination(sn)))
+	}
+
+
+	var bufSns []int
+	for _, sn := range nsns {
+		bufSns = append(bufSns, sn)
+		if (len(bufSns) == config.MAX_NOTES_TO_SEND) {
+			if err := v.processTransfer(bufSns, cc, to_sn, memo); err != nil {
+				return "", err
+			}
+			bufSns = nil
+		}
+	}
+
+	if err := v.processTransfer(bufSns, cc, to_sn, memo); err != nil {
+		return "", err
+	}
+
+	//fmt.Printf("v=%d %d %v\n",total, extra, nsns)
 	//results := v.Raida.SendRequest("/service/show", params, TransferResponse{})
 
-	return "xxx", nil
+
+  toutput := &TransferOutput{}
+  toutput.AmountSent = amountInt
+  toutput.Status = "success"
+  toutput.Message = "CloudCoins sent"
+
+  b, err := json.Marshal(toutput); 
+  if err != nil {
+    return "", &error.Error{"Failed to Encode JSON"}
+  }
+
+  //fmt.Printf("ns=%d %s isok=%b\n", v.Raida.TotalServers(), pownString, v.IsStatusArrayFixable(pownArray))
+  return string(b), nil
+}
+
+func (v *Transfer) processTransfer(sns []int, cc *cloudcoin.CloudCoin, to int, memo string) *error.Error {
+	logger.Debug("Processing " + strconv.Itoa(len(sns)) + " notes")
+
+  stringSns := make([]string, len(sns))
+  for idx, ssn := range sns {
+    stringSns[idx] = strconv.Itoa(ssn)
+  }
+  ba, _ := json.Marshal(stringSns)
+
+  pownArray := make([]int, v.Raida.TotalServers())
+  params := make([]map[string]string, v.Raida.TotalServers())
+  for idx, _ := range(params) {
+    params[idx] = make(map[string]string)
+    params[idx]["b"] = "t"
+    params[idx]["nn"] = cc.Nn
+    params[idx]["sn"] = cc.Sn
+    params[idx]["an"] = cc.Ans[idx]
+    params[idx]["pan"] = cc.Ans[idx]
+    params[idx]["denomination"] = strconv.Itoa(cc.GetDenomination())
+    params[idx]["to_sn"] = strconv.Itoa(to)
+    params[idx]["tag"] = memo
+    params[idx]["sns[]"] = string(ba)
+		//fmt.Printf("x=%v\n",params[idx])
+  }
+
+  results := v.Raida.SendDefinedRequestPost("/service/transfer", params, BreakInBankResponse{})
+  for idx, result := range results {
+    if result.ErrCode == config.REMOTE_RESULT_ERROR_NONE {
+      r := result.Data.(*BreakInBankResponse)
+      if (r.Status == "allpass") {
+        pownArray[idx] = config.RAIDA_STATUS_PASS
+      } else if (r.Status == "fail") {
+        pownArray[idx] = config.RAIDA_STATUS_FAIL
+      } else {
+        pownArray[idx] = config.RAIDA_STATUS_ERROR
+      }
+    } else if (result.ErrCode == config.REMOTE_RESULT_ERROR_TIMEOUT) {
+        pownArray[idx] = config.RAIDA_STATUS_NORESPONSE
+    } else {
+        pownArray[idx] = config.RAIDA_STATUS_ERROR
+    }
+  }
+
+  pownString := v.GetPownStringFromStatusArray(pownArray)
+  logger.Debug("Pownstring " + pownString)
+
+  if !v.IsStatusArrayFixable(pownArray) {
+    return &error.Error{"Failed to Transfer: " + pownString}
+  }
+
+/*
+	for _, sn := range sns {
+		fmt.Printf("s=%d\n",sn)
+	}
+	*/
+
+	return nil
+}
 	/*
 
 	pownArray := make([]int, v.Raida.TotalServers())
@@ -152,6 +276,3 @@ func (v *Transfer) Transfer(cc *cloudcoin.CloudCoin, amount string, to string, m
 	//fmt.Printf("ns=%d %s isok=%b\n", v.Raida.TotalServers(), pownString, v.IsStatusArrayFixable(pownArray))
 	return string(b), nil
 	*/
-}
-
-
