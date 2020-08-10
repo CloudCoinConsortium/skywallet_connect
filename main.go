@@ -14,7 +14,7 @@ func Usage() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "%s [-debug] <operation> <args>\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "%s [-help]\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\n<operation> is one of 'receive|transfer'\n")
+		fmt.Fprintf(os.Stderr, "\n<operation> is one of 'view_receipt|transfer'\n")
 		fmt.Fprintf(os.Stderr, "<args> arguments for operation\n\n")
 		flag.PrintDefaults()
 }
@@ -40,7 +40,7 @@ func main() {
 	core.MkDirs()
 
 	operation := flag.Arg(0)
-	if operation == "receive" {
+	if operation == "view_receipt" {
 		uuid := flag.Arg(1)
 		owner := flag.Arg(2)
 		if (owner == "") {
