@@ -40,7 +40,7 @@ $ ./raida_go -debug view_receipt 080A4CE89126F4F1B93E4745F89F6713 merchant.mydom
 
 ## Transfer:
 
-format: ./raida_go tranfer <amount> <destination_skywallet> <memo>
+format: ./raida_go transfer <amount> <destination_skywallet> memo
 
 Example:
 
