@@ -61,3 +61,24 @@ Example:
 $ ./raida_go transfer 2 ax2.skywallet.cc "my memo"
 {"amount_sent":2,"Message":"CloudCoins sent","Status":"success"}
 ```
+
+
+Example Error if the amount to transfer, the skwyallet of the person to transfer it to or the memo is left out:
+
+```console
+{"status":"fail", "message":"Amount, To and Memo parameters required: raida_go transfer 250 destination.skywallet.cc memo "}
+```
+
+Example Error if the ID coin is not the correct location. NOTE: Only ID coins in the form of a stack file are supported at this time. 
+location of this folder for windows is:
+```
+c:\Users\<username>\CloudCoinStorage\ID
+```
+For Linux, the location is:
+```
+/home/<username>/CloudCoinStorage/ID
+```
+Error Response: 
+```console
+{"status":"fail", "message":"Failed to find ID coin"}
+```
