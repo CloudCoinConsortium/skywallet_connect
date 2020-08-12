@@ -10,27 +10,35 @@ import (
 	"core"
 )
 
+const VERSION = "0.0.1"
+
 func Usage() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "%s [-debug] <operation> <args>\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "%s [-help]\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "%s [-version]\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "\n<operation> is one of 'view_receipt|transfer'\n")
 		fmt.Fprintf(os.Stderr, "<args> arguments for operation\n\n")
 		flag.PrintDefaults()
 }
 
+func Version() {
+		fmt.Fprintf(os.Stderr, "%s\n", VERSION)
+}
 
 func main() {
 	//flag.StringVar(&config.CmdCommand, "", "", "Operation")
 	flag.BoolVar(&config.CmdDebug, "debug", false, "Display Debug Information")
 	flag.BoolVar(&config.CmdHelp, "help", false, "Show Usage")
+	flag.BoolVar(&config.CmdVersion, "version", false, "Display version")
 	flag.Usage = Usage
 	flag.Parse()
 
-	if config.CmdHelp {
-		Usage()
+	if config.CmdVersion {
+		Version()
 		os.Exit(0)
 	}
+
 
 	if flag.NArg() == 0 {
 		Usage()
@@ -41,6 +49,17 @@ func main() {
 
 	operation := flag.Arg(0)
 	if operation == "view_receipt" {
+		if (config.CmdHelp) {
+			fmt.Fprintf(os.Stderr, "view_receipt checks if the receipt with a given uuid exists and shows amount of coins in it\n\n")
+			fmt.Fprintf(os.Stderr, "Usage:\n")
+			fmt.Fprintf(os.Stderr, "%s [-debug] view_receipt <uuid> <skywallet>\n\n", os.Args[0])
+			fmt.Fprintf(os.Stderr, "<uuid> - uuid of the receipt\n")
+			fmt.Fprintf(os.Stderr, "<skywallet> - serial number, ip address, or skywallet address\n\n")
+			fmt.Fprintf(os.Stderr, "Example:\n")
+			fmt.Fprintf(os.Stderr, "%s view_receipt 080A4CE89126F4F1B93E4745F89F6713 demo.skywallet.cc\n", os.Args[0])
+			os.Exit(0)
+		}
+
 		uuid := flag.Arg(1)
 		owner := flag.Arg(2)
 		if (owner == "") {
@@ -56,14 +75,25 @@ func main() {
 
 		fmt.Println(response)
 	} else if operation == "transfer" {
+		if (config.CmdHelp) {
+			fmt.Fprintf(os.Stderr, "transfer sends coins from your Sky Wallet to another Sky Wallet. You need to create an 'ID' folder in the current directory and put your Sky Wallet ID Coin there before you can use transfer\n\n")
+			fmt.Fprintf(os.Stderr, "Usage:\n")
+			fmt.Fprintf(os.Stderr, "%s [-debug] transfer <amount> <destination skywallet> <memo>\n\n", os.Args[0])
+			fmt.Fprintf(os.Stderr, "<amount> - amount to transfer\n")
+			fmt.Fprintf(os.Stderr, "<destination skywallet> - serial number, ip address, or skywallet address of the receiver\n")
+			fmt.Fprintf(os.Stderr, "<memo> - memo\n\n")
+			fmt.Fprintf(os.Stderr, "Example:\n")
+			fmt.Fprintf(os.Stderr, "%s transfer 10 ax2.skywallet.cc \"my memo\"\n", os.Args[0])
+			os.Exit(0)
+		}
 		amount, to, memo := flag.Arg(1), flag.Arg(2), flag.Arg(3)
 		cc, err := core.GetIDCoin()
 		if err != nil {
-			fmt.Printf("%s", core.JsonError("Failed to find ID coin"))
+			fmt.Printf("%s", core.JsonError(err.Message))
 			os.Exit(1)
 		}
-		if (amount == "" || to == "") {
-			fmt.Printf("%s", core.JsonError("Amount and To parameters required: " + os.Args[0] + " transfer 250 destination.skywallet.cc memo"))
+		if (amount == "" || to == "" || memo == "") {
+			fmt.Printf("%s", core.JsonError("Amount, To and Memo parameters required: " + os.Args[0] + " transfer 250 destination.skywallet.cc memo"))
 			os.Exit(1)
 		}
 
@@ -76,6 +106,10 @@ func main() {
 		fmt.Println(response)
 
 	} else {
+		if config.CmdHelp {
+			Usage()
+			os.Exit(0)
+		}
 		Usage()
 		os.Exit(1)
 	}

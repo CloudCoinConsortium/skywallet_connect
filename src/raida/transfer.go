@@ -154,8 +154,8 @@ func (v *Transfer) processTransfer(sns []int, cc *cloudcoin.CloudCoin, to int, m
   for idx, _ := range(params) {
     params[idx] = make(map[string]string)
     params[idx]["b"] = "t"
-    params[idx]["nn"] = cc.Nn
-    params[idx]["sn"] = cc.Sn
+    params[idx]["nn"] = string(cc.Nn)
+    params[idx]["sn"] = string(cc.Sn)
     params[idx]["an"] = cc.Ans[idx]
     params[idx]["pan"] = cc.Ans[idx]
     params[idx]["denomination"] = strconv.Itoa(cc.GetDenomination())

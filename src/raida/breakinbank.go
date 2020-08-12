@@ -60,8 +60,8 @@ func (v *BreakInBank) BreakInBank(cc *cloudcoin.CloudCoin, snToBreak int) ([]int
 	params := make([]map[string]string, v.Raida.TotalServers())
 	for idx, _ := range(params) {
 		params[idx] = make(map[string]string)
-		params[idx]["id_nn"] = cc.Nn
-		params[idx]["id_sn"] = cc.Sn
+		params[idx]["id_nn"] = string(cc.Nn)
+		params[idx]["id_sn"] = string(cc.Sn)
 		params[idx]["id_an"] = cc.Ans[idx]
 		params[idx]["id_dn"] = strconv.Itoa(cc.GetDenomination())
 		params[idx]["nn"] = strconv.Itoa(config.DEFAULT_NN)

@@ -20,6 +20,7 @@ const PUBLIC_CHANGE_MAKER_ID = 2
 
 var CmdDebug bool
 var CmdHelp bool
+var CmdVersion bool
 var CmdCommand string
 
 const TOTAL_RAIDA_NUMBER = 25

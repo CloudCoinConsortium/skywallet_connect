@@ -3,17 +3,18 @@ package cloudcoin
 
 import (
 	"logger"
-//	"encoding/json"
+	"encoding/json"
 //	"os"
 //	"io/ioutil"
 	"strconv"
 //"config"
-//	"error"
+	"error"
+	"strings"
 )
 
 type CloudCoin struct {
-	Nn string `json:"nn"`
-	Sn string `json:"sn"`
+	Nn json.Number `json:"nn"`
+	Sn json.Number `json:"sn"`
 	Ans []string `json:"an"`
 	Pans []string `json:"pan"`
 }
@@ -27,7 +28,14 @@ func New(path string) *CloudCoin {
 	//ans := make([]string, 0)
 	//pans := make([]string, 0)
 
-	ccStack, err := ReadFromFile(path)
+	var ccStack *CloudCoinStack
+	var err *error.Error
+	if (strings.HasSuffix(path, ".png")) {
+		ccStack, err = ReadFromPNGFile(path)
+	} else {
+		ccStack, err = ReadFromFile(path)
+	}
+
 	if err != nil {
 		return nil
 	}
@@ -38,6 +46,7 @@ func New(path string) *CloudCoin {
 	}
 
 	cc := ccStack.Stack[0]
+	
 	if !ValidateCoin(&cc) {
 		logger.Error("Coin is corrupted")
 		return nil
@@ -47,7 +56,7 @@ func New(path string) *CloudCoin {
 }
 
 func (cc *CloudCoin) GetDenomination() int {
-	snInt, err := strconv.Atoi(cc.Sn)
+	snInt, err := strconv.Atoi(string(cc.Sn))
 	if err != nil {
 		return 0
 	}

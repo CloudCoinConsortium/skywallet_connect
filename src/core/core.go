@@ -2,7 +2,7 @@ package core
 
 
 import (
-	"os/user"
+	//"os/user"
 	"logger"
 	"config"
 	"os"
@@ -14,6 +14,7 @@ import (
 
 
 func GetRootPath() string {
+	/*
 	root, err := user.Current()
 	if err != nil {
 		logger.Error("Failed to get current user")
@@ -21,24 +22,22 @@ func GetRootPath() string {
 	}
 
 	return root.HomeDir + Ps() + config.TOPDIR
+	*/
+	path, err := os.Getwd()
+	if err != nil {
+		logger.Error("Failed to find current directory")
+		panic("Failed to find current directory")
+	}
+
+	return path
 }
 
 
 func MkDirs() {
-	rootDir := GetRootPath()
+	//rootDir := GetRootPath()
 
-	MkDir(rootDir)
-	MkDir(rootDir + Ps() + config.DIR_ID)
-
-
-	/*
-	if cc, err := GetIDCoin(); err != nil {
-		logger.Debug("xxxxxxxxx: " +err.Message)
-	} else {
-
-	fmt.Printf("s=%s\n",cc.Sn)
-	}
-	*/
+//	MkDir(rootDir)
+//	MkDir(rootDir + Ps() + config.DIR_ID)
 
 }
 
@@ -67,12 +66,12 @@ func GetIDCoin() (*cloudcoin.CloudCoin, *error.Error) {
 
 	_, err := os.Stat(idpath)
 	if os.IsNotExist(err) {
-		return nil, &error.Error{"Path " + idpath + " doesn't exist"}
+		return nil, &error.Error{"Failed to find ID coin, please create a folder called ID in the same folder as your raida_go program. Place one ID coins in that folder"}
 	}
 
 	files, err := ioutil.ReadDir(idpath)
 	if err != nil {
-		return nil, &error.Error{"Failed to readdir " + idpath}
+		return nil, &error.Error{"Failed to read folder " + idpath}
 	}
 
 	var ccname string
@@ -82,7 +81,7 @@ func GetIDCoin() (*cloudcoin.CloudCoin, *error.Error) {
 	}
 
 	if ccname == "" {
-		return nil, &error.Error{"ID Coin not found"}
+		return nil, &error.Error{"Failed to find ID coin, please create a folder called ID in the same folder as your raida_go program. Place one ID coins in that folder"}
 	}
 
 	logger.Debug("Foind ID coin: " + ccname)

@@ -13,6 +13,9 @@ import (
 	"config"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/binary"
+	"fmt"
+	"hash/crc32"
 )
 
 func GuessSNFromString(param string) (int, *error.Error) {
@@ -89,12 +92,12 @@ func ValidateSN(sn int) bool {
 }
 
 func ValidateCoin(cc *CloudCoin) bool {
-	nn, err := strconv.Atoi(cc.Nn)
+	nn, err := strconv.Atoi(string(cc.Nn))
 	if err != nil {
 		return false
 	}
 
-	sn, err := strconv.Atoi(cc.Sn)
+	sn, err := strconv.Atoi(string(cc.Sn))
 	if err != nil {
 		return false
 	}
@@ -142,11 +145,127 @@ func GetDenomination(sn int) int {
 	return 0
 }
 
+func calcCrc32(data []byte) uint32 {
+//	crc32q := crc32.MakeTable(0xD5828281)
+	crc32q := crc32.MakeTable(0xedb88320)
+
+	return  crc32.Checksum([]byte(data), crc32q)
+}
+
+func basicPNGChecks(bytes []byte) int {
+	if bytes[0] != 0x89 && bytes[1] != 0x50 && bytes[2] != 0x4e && bytes[3] != 0x45 && bytes[4] != 0x0d && bytes[5] != 0x0a && bytes[6] != 0x1a && bytes[7] != 0x0a {
+		logger.Error("Invalid PNG signature")
+		return -1
+  }
+
+	chunkLength := binary.BigEndian.Uint32(bytes[8:])
+	headerSig := binary.BigEndian.Uint32(bytes[12:])
+	if headerSig != 0x49484452 {
+		logger.Error("Invalid PNG header")
+		return -1
+	}
+
+	idx := int(16 + chunkLength)
+	crcOffset := 12 + int(4 + chunkLength)
+  crcSig := binary.BigEndian.Uint32(bytes[idx:])
+	calcCrc := calcCrc32(bytes[12:crcOffset])
+	if crcSig != calcCrc {
+		logger.Error("Invalid PNG Crc32 checksum");
+		return -1
+	}
+
+	return idx
+}
+
+func ReadFromPNGFile(fname string) (*CloudCoinStack, *error.Error) {
+	logger.Debug("Parsing PNG CloudCoin " + fname)
+
+	file, err := os.Open(fname); 
+	if err != nil {
+		logger.Error("Failed to open file: " + fname)
+		return nil, &error.Error{"Failed to open file " + fname}
+	}
+
+	defer file.Close()
+
+
+	byteValue, err := ioutil.ReadAll(file); 
+	if err != nil {
+		logger.Error("Failed to read file: " + fname)
+		return nil, &error.Error{"Failed to read file " + fname}
+	}
+	
+	idx := basicPNGChecks(byteValue) 
+	if idx == -1 {
+		logger.Error("PNG is corrupted")
+		return nil, &error.Error{"PNG is corrupted"}
+	}
+
+	i := 0
+	var length int
+	for ;; {
+		sidx := idx + 4 + i
+		if sidx >= len(byteValue) {
+				logger.Error("Failed to find stack in the PNG file")
+				return nil, &error.Error{"CloudCoin was not found"}
+		}
+
+		length = int(binary.BigEndian.Uint32(byteValue[sidx:]))
+		if length == 0 {
+			i += 12
+			if i > len(byteValue) {
+				logger.Error("Failed to find stack in the PNG file")
+				return nil, &error.Error{"CloudCoin was not found"}
+			}
+		}
+	
+		f := sidx + 4
+		l := sidx + 8
+		sig := string(byteValue[f:l])
+		logger.Debug("signature " + sig)
+		if sig == "cLDc" {
+			crcSig := binary.BigEndian.Uint32(byteValue[sidx + 8 + length:])
+			calcSig := calcCrc32(byteValue[f:f + length + 4])
+
+			if crcSig != calcSig {
+				logger.Error("CRC32 is incorrect")
+				return nil, &error.Error{"CRC32 is incorrect"}
+			}
+
+			break
+		}
+
+		i += length + 12
+		if i > len(byteValue) {
+			logger.Error("Failed to find stack in the PNG file")
+			return nil, &error.Error{"CloudCoin was not found"}
+		}
+	}
+
+
+	stringStack := string(byteValue[idx + 4 + i + 8: idx + 4 +i + 8 +length])
+	newByteValue := []byte(stringStack)
+	var ccStack CloudCoinStack
+	err = json.Unmarshal(newByteValue, &ccStack)
+	if err != nil {
+		fmt.Println(err)
+		logger.Error("Failed to parse stack: " + stringStack)
+		return nil, &error.Error{"Failed to parse stack"}
+	}
+
+	if len(ccStack.Stack) == 0 {
+		logger.Error("Corrupted Stack")
+		return nil, &error.Error{"Stack is Corrupted"}
+	}
+
+	return &ccStack, nil
+}
+
+
 
 
 func ReadFromFile(fname string) (*CloudCoinStack, *error.Error) {
 	logger.Debug("Parsing CloudCoin " + fname)
-
 
 	file, err := os.Open(fname); 
 	if err != nil {

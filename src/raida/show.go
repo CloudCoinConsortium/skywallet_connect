@@ -44,14 +44,14 @@ func (v *Show) Show(cc *cloudcoin.CloudCoin) ([]int, int, *error.Error) {
 		return nil, 0, &error.Error{"CloudCoin is invalid"}
 	}
 
-	logger.Debug("Showing coins for " + cc.Sn)
+	logger.Debug("Showing coins for " + string(cc.Sn))
 
 	pownArray := make([]int, v.Raida.TotalServers())
 	params := make([]map[string]string, v.Raida.TotalServers())
 	for idx, _ := range(params) {
 		params[idx] = make(map[string]string)
-		params[idx]["nn"] = cc.Nn
-		params[idx]["sn"] = cc.Sn
+		params[idx]["nn"] = string(cc.Nn)
+		params[idx]["sn"] = string(cc.Sn)
 		params[idx]["an"] = cc.Ans[idx]
 		params[idx]["pan"] = cc.Ans[idx]
 		params[idx]["denomination"] = strconv.Itoa(cc.GetDenomination())
