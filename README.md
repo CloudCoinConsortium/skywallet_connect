@@ -17,11 +17,19 @@ Usage of ./raida_go on Linux Systems:
 
   -debug
         Display Debug Information
-	-help
+  -help
         Show Usage
   -version
         Display Version
 ```
+
+You can add -help parameter to any specific operation 
+
+```console
+./raida_go -help view_receipt
+./raida_go -help transfer
+```
+
 
 Linux Example of how to check how many CloudCoins were sent to the merchant.mydomain.com Skywallet account with a guid in the memo:
 
@@ -46,12 +54,6 @@ $ ./raida_go -debug view_receipt 080A4CE89126F4F1B93E4745F89F6713 merchant.mydom
 
 
 ## Transfer:
-
-In order to use Transfer you need to put your ID coin to the ID Folder
-
-```console
-%HOME%\CloudCoinStorage\ID
-```
 
 format: ./raida_go transfer <amount> <destination_skywallet> memo
 
