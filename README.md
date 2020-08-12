@@ -2,6 +2,17 @@
 
 RAIDA GO Console program allows you to verify that you have received funds in your Skwyallet and to send fund to another Skywallet account from your Skywallet. You can find both the Linux and Windows version at: https://CloudCoin.global/assets/raida_go.zip
 
+## Folder Structure
+Some of the raida_go commands require that you have a Skywallet ID coin to work. You will need to created a folder caled "CloudCoinStorage". The location of this folder for windows is:
+```
+c:\Users\<username>\CloudCoinStorage\ID
+```
+For Linux, the location is:
+```
+/home/<username>/CloudCoinStorage/ID
+```
+
+## Example Usage
 
 Usage of ./raida_go on Linux Systems:
 ```console
@@ -15,12 +26,15 @@ Usage of ./raida_go on Linux Systems:
         Display Debug Information
   -help
         Show Usage
-
+	-version
+				Display Version
 ```
 
 Linux Example of how to check how many CloudCoins were sent to the merchant.mydomain.com Skywallet account with a guid in the memo:
 
 ## View Receipt
+View receipt allows you to see the money that someone sent to your Skywallet. You must provide 
+your account name and the GUID the customer has sent you in their memo. Note, the Skywallet point of service (POSJS) software will generate a guid for the customer and they will never see it.  
 
 ```console
 $ ./raida_go view_receipt 080A4CE89126F4F1B93E4745F89F6713 merchant.mydomain.com
@@ -79,3 +93,19 @@ The list of possible errors:
 {"status":"error", "message":"Failed to get Change Method"}  // The program doesn't know how to break coin
 {"status":"error", "message":"ShowChange results are not synchronized"}  // The program can't receive trustworthy results after ShowChange
 </pre>
+
+Example Error if the amount to transfer, the skwyallet of the person to transfer it to or the memo is left out:
+
+```console
+{"status":"fail", "message":"Amount, To and Memo parameters required: raida_go transfer 250 destination.skywallet.cc memo "}
+```
+
+Example Error if the ID coin is not the correct location. NOTE: Only ID coins in the form of a stack file are supported at this time. 
+location of this folder for windows is:
+```
+%CURRENT_DIR%\ID
+```
+For Linux, the location is:
+```
+%CURRENT_DIR%/ID
+```
