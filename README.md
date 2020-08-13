@@ -1,6 +1,6 @@
 # raidaGo
 
-RAIDA GO Console program allows you to verify that you have received funds in your Skwyallet and to send fund to another Skywallet account from your Skywallet. You can find both the Linux and Windows version at: https://CloudCoin.global/assets/raida_go.zip
+RAIDA GO Console program allows you to verify that you have received funds in your Skwyallet and to send funds to another Skywallet account from your Skywallet. You can find both the Linux and Windows version at: https://CloudCoin.global/assets/raida_go.zip
 
 ## Folder Structure
 Some of the raida_go commands require that you have a Skywallet ID coin to work. You will need to created a folder called "ID" in the current directory.
