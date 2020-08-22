@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"error"
 	"fmt"
+	"time"
 )
 
 
@@ -66,12 +67,12 @@ func GetIDCoin() (*cloudcoin.CloudCoin, *error.Error) {
 
 	_, err := os.Stat(idpath)
 	if os.IsNotExist(err) {
-		return nil, &error.Error{"Failed to find ID coin, please create a folder called ID in the same folder as your raida_go program. Place one ID coins in that folder"}
+		return nil, &error.Error{config.ERROR_ID_COIN_MISSING, "Failed to find ID coin, please create a folder called ID in the same folder as your raida_go program. Place one ID coins in that folder"}
 	}
 
 	files, err := ioutil.ReadDir(idpath)
 	if err != nil {
-		return nil, &error.Error{"Failed to read folder " + idpath}
+		return nil, &error.Error{config.ERROR_READ_DIRECTORY, "Failed to read folder " + idpath}
 	}
 
 	var ccname string
@@ -81,22 +82,27 @@ func GetIDCoin() (*cloudcoin.CloudCoin, *error.Error) {
 	}
 
 	if ccname == "" {
-		return nil, &error.Error{"Failed to find ID coin, please create a folder called ID in the same folder as your raida_go program. Place one ID coins in that folder"}
+		return nil, &error.Error{config.ERROR_ID_COIN_MISSING, "Failed to find ID coin, please create a folder called ID in the same folder as your raida_go program. Place one ID coins in that folder"}
 	}
 
 	logger.Debug("Foind ID coin: " + ccname)
 
 	cc := cloudcoin.New(ccname)
 	if cc == nil {
-		return nil, &error.Error{"Failed to parse ID Coin"}
+		return nil, &error.Error{config.ERROR_INVALID_CLOUDCOIN_FORMAT, "Failed to parse ID Coin"}
 	}
 
 	return cc, nil
 }
 
-func JsonError(txt string) string {
-	var str = fmt.Sprintf("{\"status\":\"fail\", \"message\":\"%s\"}", txt)
+func JsonError(code int, txt string) string {
+	var str = fmt.Sprintf("{\"status\":\"fail\", \"code\":%d \"message\":\"%s\", \"time\":\"%s\"}", code, txt, time.Since(time.Now()))
 
 	return str
+}
+
+func ShowError(code int, txt string) {
+	fmt.Printf("%s", JsonError(code, txt))
+	os.Exit(code)
 }
 

@@ -10,7 +10,7 @@ import (
 	"core"
 )
 
-const VERSION = "0.0.1"
+const VERSION = "0.0.2"
 
 func Usage() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
@@ -23,7 +23,7 @@ func Usage() {
 }
 
 func Version() {
-		fmt.Fprintf(os.Stderr, "%s\n", VERSION)
+		fmt.Printf("%s\n", VERSION)
 }
 
 func main() {
@@ -41,8 +41,7 @@ func main() {
 
 
 	if flag.NArg() == 0 {
-		Usage()
-		os.Exit(1)
+		core.ShowError(config.ERROR_INCORRECT_USAGE, "Operation is not specified")
 	}
 
 	core.MkDirs()
@@ -63,14 +62,12 @@ func main() {
 		uuid := flag.Arg(1)
 		owner := flag.Arg(2)
 		if (owner == "") {
-			fmt.Printf("%s", core.JsonError("Receive requires two arguments: guid and owner"))
-			os.Exit(1)
+			core.ShowError(config.ERROR_INCORRECT_USAGE, "Receive requires two arguments: guid and owner")
 		}
 		r := raida.NewVerifier()
 		response, err := r.Receive(uuid, owner)
 		if err != nil {
-			fmt.Printf("%s", core.JsonError(err.Message))
-			os.Exit(1)
+			core.ShowError(err.Code, err.Message)
 		}
 
 		fmt.Println(response)
@@ -89,19 +86,16 @@ func main() {
 		amount, to, memo := flag.Arg(1), flag.Arg(2), flag.Arg(3)
 		cc, err := core.GetIDCoin()
 		if err != nil {
-			fmt.Printf("%s", core.JsonError(err.Message))
-			os.Exit(1)
+			core.ShowError(err.Code, err.Message)
 		}
 		if (amount == "" || to == "" || memo == "") {
-			fmt.Printf("%s", core.JsonError("Amount, To and Memo parameters required: " + os.Args[0] + " transfer 250 destination.skywallet.cc memo"))
-			os.Exit(1)
+			core.ShowError(config.ERROR_INCORRECT_USAGE, "Amount, To and Memo parameters required: " + os.Args[0] + " transfer 250 destination.skywallet.cc memo")
 		}
 
 		t := raida.NewTransfer()
 		response, err := t.Transfer(cc, amount, to, memo)
 		if err != nil {
-			fmt.Printf("%s", core.JsonError(err.Message))
-			os.Exit(1)
+			core.ShowError(err.Code, err.Message)
 		}
 		fmt.Println(response)
 
@@ -110,8 +104,8 @@ func main() {
 			Usage()
 			os.Exit(0)
 		}
-		Usage()
-		os.Exit(1)
+
+		core.ShowError(config.ERROR_INCORRECT_USAGE, "Invalid command")
 	}
 
 	//fmt.Printf("cmd=%d\n",flag.NArg(), flag.Arg(0), flag.Arg(1))

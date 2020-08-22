@@ -52,7 +52,7 @@ func ResolveSkyWallet(skywallet string) (int, *error.Error) {
 
 	sn, err2 := GetSNFromIP(addr)
 	if err2 != nil {
-		return 0, &error.Error{"Failed to get SN from IP"}
+		return 0, &error.Error{config.ERROR_GET_SERIAL_NUMBER_FROM_IP, "Failed to get SN from IP"}
 	}
 
 	logger.Debug("Extracted SN " + strconv.Itoa(sn))
@@ -66,17 +66,17 @@ func GetSNFromIP(ipaddress string) (int, *error.Error) {
 	if (len(s) == 5) {
 		o2, err := strconv.Atoi(s[2])
 		if (err != nil) {
-			return 0,  &error.Error{"Failed to convert IP octet2"}
+			return 0,  &error.Error{config.ERROR_GET_SERIAL_NUMBER_FROM_IP, "Failed to convert IP octet2"}
 		}
 
 		o3, err := strconv.Atoi(s[3])
 		if (err != nil) {
-			return 0, &error.Error{"Failed to convert IP octet3"}
+			return 0, &error.Error{config.ERROR_GET_SERIAL_NUMBER_FROM_IP, "Failed to convert IP octet3"}
 		}
 
 		o4, err := strconv.Atoi(s[4])
 		if (err != nil) {
-			return 0, &error.Error{"Failed to convert IP octet4"}
+			return 0, &error.Error{config.ERROR_GET_SERIAL_NUMBER_FROM_IP, "Failed to convert IP octet4"}
 		}
 
 		sn := (o2 << 16) | (o3 << 8) | o4
@@ -84,7 +84,7 @@ func GetSNFromIP(ipaddress string) (int, *error.Error) {
 		return sn, nil
 	}
 
-	return 0, &error.Error{}
+	return 0, &error.Error{config.ERROR_GET_SERIAL_NUMBER_FROM_IP, "Invalid IP address"}
 }
 
 func ValidateSN(sn int) bool {
@@ -183,7 +183,7 @@ func ReadFromPNGFile(fname string) (*CloudCoinStack, *error.Error) {
 	file, err := os.Open(fname); 
 	if err != nil {
 		logger.Error("Failed to open file: " + fname)
-		return nil, &error.Error{"Failed to open file " + fname}
+		return nil, &error.Error{config.ERROR_OPEN_FILE, "Failed to open file " + fname}
 	}
 
 	defer file.Close()
@@ -192,13 +192,13 @@ func ReadFromPNGFile(fname string) (*CloudCoinStack, *error.Error) {
 	byteValue, err := ioutil.ReadAll(file); 
 	if err != nil {
 		logger.Error("Failed to read file: " + fname)
-		return nil, &error.Error{"Failed to read file " + fname}
+		return nil, &error.Error{config.ERROR_READ_FILE, "Failed to read file " + fname}
 	}
 	
 	idx := basicPNGChecks(byteValue) 
 	if idx == -1 {
 		logger.Error("PNG is corrupted")
-		return nil, &error.Error{"PNG is corrupted"}
+		return nil, &error.Error{config.ERROR_CORRUPTED_PNG_FILE, "PNG is corrupted"}
 	}
 
 	i := 0
@@ -207,7 +207,7 @@ func ReadFromPNGFile(fname string) (*CloudCoinStack, *error.Error) {
 		sidx := idx + 4 + i
 		if sidx >= len(byteValue) {
 				logger.Error("Failed to find stack in the PNG file")
-				return nil, &error.Error{"CloudCoin was not found"}
+				return nil, &error.Error{config.ERROR_CLOUDCOIN_NOT_FOUND_IN_PNG, "CloudCoin was not found"}
 		}
 
 		length = int(binary.BigEndian.Uint32(byteValue[sidx:]))
@@ -215,7 +215,7 @@ func ReadFromPNGFile(fname string) (*CloudCoinStack, *error.Error) {
 			i += 12
 			if i > len(byteValue) {
 				logger.Error("Failed to find stack in the PNG file")
-				return nil, &error.Error{"CloudCoin was not found"}
+				return nil, &error.Error{config.ERROR_CLOUDCOIN_NOT_FOUND_IN_PNG, "CloudCoin was not found"}
 			}
 		}
 	
@@ -229,7 +229,7 @@ func ReadFromPNGFile(fname string) (*CloudCoinStack, *error.Error) {
 
 			if crcSig != calcSig {
 				logger.Error("CRC32 is incorrect")
-				return nil, &error.Error{"CRC32 is incorrect"}
+				return nil, &error.Error{config.ERROR_CLOUDCOIN_PNG_CRC32_INCORRECT, "CRC32 is incorrect"}
 			}
 
 			break
@@ -238,7 +238,7 @@ func ReadFromPNGFile(fname string) (*CloudCoinStack, *error.Error) {
 		i += length + 12
 		if i > len(byteValue) {
 			logger.Error("Failed to find stack in the PNG file")
-			return nil, &error.Error{"CloudCoin was not found"}
+			return nil, &error.Error{config.ERROR_CLOUDCOIN_NOT_FOUND_IN_PNG, "CloudCoin was not found"}
 		}
 	}
 
@@ -250,12 +250,12 @@ func ReadFromPNGFile(fname string) (*CloudCoinStack, *error.Error) {
 	if err != nil {
 		fmt.Println(err)
 		logger.Error("Failed to parse stack: " + stringStack)
-		return nil, &error.Error{"Failed to parse stack"}
+		return nil, &error.Error{config.ERROR_CLOUDCOIN_PARSE, "Failed to parse stack"}
 	}
 
 	if len(ccStack.Stack) == 0 {
 		logger.Error("Corrupted Stack")
-		return nil, &error.Error{"Stack is Corrupted"}
+		return nil, &error.Error{config.ERROR_INVALID_CLOUDCOIN_FORMAT, "Stack is Corrupted"}
 	}
 
 	return &ccStack, nil
@@ -270,7 +270,7 @@ func ReadFromFile(fname string) (*CloudCoinStack, *error.Error) {
 	file, err := os.Open(fname); 
 	if err != nil {
 		logger.Error("Failed to open file: " + fname)
-		return nil, &error.Error{"Failed to open file " + fname}
+		return nil, &error.Error{config.ERROR_OPEN_FILE, "Failed to open file " + fname}
 	}
 
 	defer file.Close()
@@ -278,19 +278,19 @@ func ReadFromFile(fname string) (*CloudCoinStack, *error.Error) {
 	byteValue, err := ioutil.ReadAll(file); 
 	if err != nil {
 		logger.Error("Failed to read file: " + fname)
-		return nil, &error.Error{"Failed to read file " + fname}
+		return nil, &error.Error{config.ERROR_READ_FILE, "Failed to read file " + fname}
 	}
 
 	var ccStack CloudCoinStack
 	err = json.Unmarshal(byteValue, &ccStack)
 	if err != nil {
 		logger.Error("Failed to parse file: " + fname)
-		return nil, &error.Error{"Failed to parse file " + fname}
+		return nil, &error.Error{config.ERROR_INVALID_CLOUDCOIN_FORMAT, "Failed to parse file " + fname}
 	}
 
 	if len(ccStack.Stack) == 0 {
 		logger.Error("Corrupted Stack File")
-		return nil, &error.Error{"Stack File is Corrupted"}
+		return nil, &error.Error{config.ERROR_INVALID_CLOUDCOIN_FORMAT, "Stack File is Corrupted"}
 	}
 
 	return &ccStack, nil
@@ -453,7 +453,7 @@ func GenerateHex(length int) (string, *error.Error) {
 	bytes := make([]byte, length)
 
 	if _, err := rand.Read(bytes); err != nil {
-		return "", &error.Error{"Failed to generate random string"}
+		return "", &error.Error{config.ERROR_GENERATE_RANDOM_NUMBER, "Failed to generate random string"}
 	}
 
 	return hex.EncodeToString(bytes), nil

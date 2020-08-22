@@ -32,7 +32,7 @@ func NewBreakInBank() (*BreakInBank) {
 
 func (v *BreakInBank) BreakInBank(cc *cloudcoin.CloudCoin, snToBreak int) ([]int, *error.Error) {
 	if !cloudcoin.ValidateCoin(cc) {
-		return nil, &error.Error{"CloudCoin is invalid"}
+		return nil, &error.Error{config.ERROR_INVALID_CLOUDCOIN_FORMAT, "CloudCoin is invalid"}
 	}
 
 	logger.Debug("BreakInBank coin " + strconv.Itoa(snToBreak))
@@ -40,7 +40,7 @@ func (v *BreakInBank) BreakInBank(cc *cloudcoin.CloudCoin, snToBreak int) ([]int
 	cm := cloudcoin.GetChangeMethod(cloudcoin.GetDenomination(snToBreak))
 	if cm == 0 {
 		logger.Error("Failed to get Change Method")
-		return nil, &error.Error{"Failed to get Change Method"}
+		return nil, &error.Error{config.ERROR_CHANGE_METHOD_NOT_FOUND, "Failed to get Change Method"}
 	}
 
 	s := NewShowChange()
@@ -93,7 +93,7 @@ func (v *BreakInBank) BreakInBank(cc *cloudcoin.CloudCoin, snToBreak int) ([]int
   logger.Debug("Pownstring " + pownString)
 
 	if !v.IsStatusArrayFixable(pownArray) {
-		return nil, &error.Error{"Failed to Break Coin: " + pownString}
+		return nil, &error.Error{config.ERROR_BREAK_IN_BANK_FAILED, "Failed to Break Coin: " + pownString}
 	}
 
 	return sns, nil

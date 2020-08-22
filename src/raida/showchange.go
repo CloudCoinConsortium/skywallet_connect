@@ -134,7 +134,7 @@ func (v *ShowChange) ShowChange(cm, snToBreak int) ([]int, *error.Error) {
   logger.Debug("Pownstring " + pownString)
 
 	if !v.IsStatusArrayFixable(pownArray) {
-		return nil, &error.Error{"ShowChange results are not synchronized"}
+		return nil, &error.Error{config.ERROR_RESULTS_FROM_RAIDA_OUT_OF_SYNC, "ShowChange results are not synchronized"}
 	}
 
 	csns1, _ := v.GetSNsOverlap(rsns1)

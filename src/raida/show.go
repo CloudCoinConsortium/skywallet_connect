@@ -41,7 +41,7 @@ func NewShow() (*Show) {
 
 func (v *Show) Show(cc *cloudcoin.CloudCoin) ([]int, int, *error.Error) {
 	if !cloudcoin.ValidateCoin(cc) {
-		return nil, 0, &error.Error{"CloudCoin is invalid"}
+		return nil, 0, &error.Error{config.ERROR_INVALID_CLOUDCOIN_FORMAT, "CloudCoin is invalid"}
 	}
 
 	logger.Debug("Showing coins for " + string(cc.Sn))
@@ -94,7 +94,7 @@ func (v *Show) Show(cc *cloudcoin.CloudCoin) ([]int, int, *error.Error) {
   logger.Debug("Pownstring " + pownString)
 
 	if !v.IsStatusArrayFixable(pownArray) {
-		return nil, 0, &error.Error{"Results from the RAIDA are not synchronized"}
+		return nil, 0, &error.Error{config.ERROR_RESULTS_FROM_RAIDA_OUT_OF_SYNC, "Results from the RAIDA are not synchronized"}
 	}
 
 	sns, total := v.GetSNsOverlap(snhash)
@@ -102,91 +102,4 @@ func (v *Show) Show(cc *cloudcoin.CloudCoin) ([]int, int, *error.Error) {
 	logger.Debug("Total Coins: " + strconv.Itoa(total))
 
 	return sns, total, nil
-/*
-	logger.Debug("Started Show with UUID " + uuid + " owner " + owner)
-
-	matched, err := regexp.MatchString(`^[A-Fa-f0-9]{32}$`, uuid)
-	if err != nil || !matched {
-		return "", &Error{"UUID invalid or not defined"}
-	}
-
-	sn, err := cloudcoin.GuessSNFromString(owner)
-	if (err != nil) {
-		return "", &Error{"Invalid Owner"}
-	}
-
-	logger.Debug("owner SN " +  strconv.Itoa(sn))
-
-	pownArray := make([]int, v.Raida.TotalServers())
-	balances := make(map[int]int)
-
-	params := make(map[string]string)
-	params["tag"] = uuid
-	params["owner"] = strconv.Itoa(sn)
-
-	results := v.Raida.SendRequest("/service/view_receipt", params, ShowResponse{})
-  for idx, result := range results {
-    if result.ErrCode == config.REMOTE_RESULT_ERROR_NONE {
-      r := result.Data.(*ShowResponse)
-			if (r.Message != "success") {
-				pownArray[idx] = config.RAIDA_STATUS_FAIL
-				balances[0]++
-			} else {
-				pownArray[idx] = config.RAIDA_STATUS_PASS
-				total := r.TotalReceived
-
-				balances[total]++
-				logger.Debug("raida " + strconv.Itoa(idx) + " total " + strconv.Itoa(total))
-			}
-
-    } else if (result.ErrCode == config.REMOTE_RESULT_ERROR_TIMEOUT) {
-			pownArray[idx] = config.RAIDA_STATUS_NORESPONSE
-			balances[0]++
-		} else {
-			pownArray[idx] = config.RAIDA_STATUS_ERROR
-			balances[0]++
-		}
-  }
-
-	pairs := sortByCount(balances)
-	topBalance := pairs[0].Key
-
-	logger.Debug("Most voted balance: " + strconv.Itoa(topBalance))
-  for idx, result := range results {
-    if result.ErrCode != config.REMOTE_RESULT_ERROR_NONE {
-			continue
-		}
-    r := result.Data.(*ShowResponse)
-		if (r.Message != "success") {
-			continue
-		}
-
-		total := r.TotalReceived
-		if (total != topBalance) {
-			pownArray[idx] = config.RAIDA_STATUS_UNTRIED
-			logger.Debug("Raida " + strconv.Itoa(topBalance) + " is reporting incorrect balance. Skipping it")
-			continue
-		}
-	}
-
-	for key, element := range balances {
-		fmt.Printf("k=%d v=%d\n", key, element)
-	}
-	pownString := v.GetPownStringFromStatusArray(pownArray)
-	logger.Debug("Pownstring " + pownString)
-
-	if !v.IsStatusArrayFixable(pownArray) {
-		return "", &Error{"Results from the RAIDA are not synchronized"}
-	}
-
-	vo := &ShowOutput{}
-	vo.AmountVerified = topBalance
-
-	b, err := json.Marshal(vo); 
-	if err != nil {
-		return "", &Error{"Failed to Encode JSON"}
-	}
-
-	return string(b), nil
-	*/
 }

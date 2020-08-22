@@ -42,12 +42,12 @@ func (v *Verifier) Receive(uuid string, owner string) (string, *error.Error) {
 
 	matched, err := regexp.MatchString(`^[A-Fa-f0-9]{32}$`, uuid)
 	if err != nil || !matched {
-		return "", &error.Error{"UUID invalid or not defined"}
+		return "", &error.Error{config.ERROR_INVALID_RECEIPT_ID, "UUID invalid or not defined"}
 	}
 
 	sn, err2 := cloudcoin.GuessSNFromString(owner)
 	if err2 != nil {
-		return "", &error.Error{"Invalid Owner"}
+		return "", &error.Error{config.ERROR_INVALID_SKYWALLET_OWNER, "Invalid Owner"}
 	}
 
 	logger.Debug("owner SN " +  strconv.Itoa(sn))
@@ -126,7 +126,7 @@ func (v *Verifier) Receive(uuid string, owner string) (string, *error.Error) {
 	logger.Debug("Pownstring " + pownString)
 
 	if !v.IsStatusArrayFixable(pownArray) {
-		return "", &error.Error{"Results from the RAIDA are not synchronized"}
+		return "", &error.Error{config.ERROR_RESULTS_FROM_RAIDA_OUT_OF_SYNC, "Results from the RAIDA are not synchronized"}
 	}
 
 	vo := &VerifierOutput{}
@@ -149,7 +149,7 @@ func (v *Verifier) Receive(uuid string, owner string) (string, *error.Error) {
 
 	b, err := json.Marshal(vo); 
 	if err != nil {
-		return "", &error.Error{"Failed to Encode JSON"}
+		return "", &error.Error{config.ERROR_ENCODE_JSON, "Failed to Encode JSON"}
 	}
 
 	//fmt.Printf("ns=%d %s isok=%b\n", v.Raida.TotalServers(), pownString, v.IsStatusArrayFixable(pownArray))

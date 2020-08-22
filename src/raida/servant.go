@@ -253,7 +253,7 @@ func (s *Servant) GetExpCoins(sns []int, amount int) (map[int]int, *error.Error)
 	}
 
 	if (amount > total) {
-		return nil, &error.Error{"Insufficient funds"}
+		return nil, &error.Error{config.ERROR_INSUFFICIENT_FUNDS, "Insufficient funds"}
 	}
 
 	savedAmount := amount
