@@ -1,5 +1,10 @@
 # raidaGo
 
+
+Note: Before you can run the raida_go program on Linux, you must first make it an executable by running: 
+```bash
+chmod +x raida_go
+```
 RAIDA GO Console program allows you to verify that you have received funds in your Skwyallet and to send fund to another Skywallet account from your Skywallet. You can find both the Linux and Windows version at: https://CloudCoin.global/assets/raida_go.zip
 
 ## Folder Structure
