@@ -10,7 +10,7 @@ import (
 	"core"
 )
 
-const VERSION = "0.0.2"
+const VERSION = "0.0.3"
 
 func Usage() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
@@ -41,6 +41,10 @@ func main() {
 
 
 	if flag.NArg() == 0 {
+		if config.CmdHelp {
+			Usage()
+			os.Exit(0)
+		}
 		core.ShowError(config.ERROR_INCORRECT_USAGE, "Operation is not specified")
 	}
 
@@ -100,10 +104,6 @@ func main() {
 		fmt.Println(response)
 
 	} else {
-		if config.CmdHelp {
-			Usage()
-			os.Exit(0)
-		}
 
 		core.ShowError(config.ERROR_INCORRECT_USAGE, "Invalid command")
 	}
