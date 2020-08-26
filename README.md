@@ -14,8 +14,9 @@ Some of the raida_go commands require that you have a Skywallet ID coin to work.
 
 Usage of ./raida_go on Linux Systems:
 ```console
-./raida_go [-debug] <operation> <args>
+./raida_go [-debug] [-logfile logfile] <operation> <args>
 ./raida_go [-help]
+./raida_go [-version]
 
 <operation> is one of 'view_receipt|transfer'
 <args> arguments for operation
