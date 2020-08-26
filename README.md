@@ -14,9 +14,10 @@ Some of the raida_go commands require that you have a Skywallet ID coin to work.
 
 Usage of ./raida_go on Linux Systems:
 ```console
-./raida_go [-debug] [-logfile logfile] <operation> <args>
-./raida_go [-help]
-./raida_go [-version]
+Usage of raida_go:
+raida_go [-debug] [-log logfile] <operation> <args>
+raida_go [-help]
+raida_go [-version]
 
 <operation> is one of 'view_receipt|transfer'
 <args> arguments for operation
@@ -25,13 +26,16 @@ Usage of ./raida_go on Linux Systems:
         Display Debug Information
   -help
         Show Usage
+  -logfile string
+        Logfile path
   -version
-        Display Version
+        Display version
 ```
 
 You can add -help parameter to any specific operation 
 
 ```console
+./raida_go -help
 ./raida_go -help view_receipt
 ./raida_go -help transfer
 ```
@@ -93,12 +97,12 @@ Note: These error codes are the same for all commands
 
 ## Transfer:
 
-format: ./raida_go transfer <amount> <destination_skywallet> memo
-
+format: ./raida_go transfer <amount of coins to transfer> <destination_skywallet> <memo> <path to ID coin>
+ 
 Example:
 
 ```console
-$ ./raida_go transfer 2 ax2.skywallet.cc "my memo"
+$ ./raida_go transfer 2 myfriend.skywallet.cc "my memo" /home/user/my.skywallet.cc.stack
 {"amount_sent":2,"Message":"CloudCoins sent","Status":"success"}
 ```
 
