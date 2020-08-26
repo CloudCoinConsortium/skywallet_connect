@@ -57,6 +57,38 @@ To see additional Debug Info:
 $ ./raida_go -debug view_receipt 080A4CE89126F4F1B93E4745F89F6713 merchant.mydomain.com
 ```
 
+Error Codes:
+Note: These error codes are the same for all commands
+```bash
+1: Incorrect Usage
+2: Could not get serial number from IP Address
+3: ID, Could not open file
+4: ID, Could not read file
+5: ID, Corupted PNG
+6. ID, CloudCoin not found in PNG ID
+7: ID, PNG CRC32 Incorrect
+8: ID, Failed to parse CloudCoin in PNG
+9: ID, Invalid CloudCoin format
+10: Random Number generation failed
+11: The ID Coin not found
+12: The ID directory could not not be read from
+13: Change Method not found
+14: Show Change failed
+15: Break-in-bank change making failed
+16: Insufficient funds to make the transfer
+17: Results from RAIDA were out of sync
+18: Invalid amount specified 
+19: Invalide Skywallet Address
+20: Show Coins failed
+21: Could not pick coins after showing
+22: Cloud not pick coins after change
+23: Failed to encode JSON 
+24: Transfering Coins Failed
+25: Invalid Receipt ID
+26: Invalid Skywallet Owner
+
+```
+
 
 ## Transfer:
 
