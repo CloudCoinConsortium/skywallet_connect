@@ -1,5 +1,9 @@
 package config
 
+import (
+	"os"
+)
+
 
 const DEFAULT_TIMEOUT = 5
 const DEFAULT_DOMAIN = "cloudcoin.global"
@@ -22,6 +26,9 @@ var CmdDebug bool
 var CmdHelp bool
 var CmdVersion bool
 var CmdCommand string
+var CmdLogfile string
+
+var LogDesc *os.File
 
 const TOTAL_RAIDA_NUMBER = 25
 
@@ -38,6 +45,7 @@ const TOPDIR = "CloudCoinStorage"
 
 const DIR_ID = "ID"
 
+const MAX_LOG_SIZE = 50000000
 
 const CHANGE_METHOD_250F = 1
 const CHANGE_METHOD_100E = 2

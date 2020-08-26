@@ -14,7 +14,7 @@ const VERSION = "0.0.3"
 
 func Usage() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "%s [-debug] <operation> <args>\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "%s [-debug] [-log logfile] <operation> <args>\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "%s [-help]\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "%s [-version]\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "\n<operation> is one of 'view_receipt|transfer'\n")
@@ -29,6 +29,7 @@ func Version() {
 func main() {
 	//flag.StringVar(&config.CmdCommand, "", "", "Operation")
 	flag.BoolVar(&config.CmdDebug, "debug", false, "Display Debug Information")
+	flag.StringVar(&config.CmdLogfile, "logfile", "", "Logfile path")
 	flag.BoolVar(&config.CmdHelp, "help", false, "Show Usage")
 	flag.BoolVar(&config.CmdVersion, "version", false, "Display version")
 	flag.Usage = Usage
@@ -39,6 +40,21 @@ func main() {
 		os.Exit(0)
 	}
 
+	if config.CmdLogfile != "" {
+		stat, _ := os.Stat(config.CmdLogfile)
+	  if stat != nil {
+			if (stat.Size() > config.MAX_LOG_SIZE) {
+				core.RotateLog(config.CmdLogfile)
+			}
+		}
+
+	  file, err0 := os.OpenFile(config.CmdLogfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644);
+	  if err0 != nil {
+			core.ShowError(config.ERROR_INCORRECT_USAGE, "Failed to open logfile")
+		}
+
+		config.LogDesc = file
+	}
 
 	if flag.NArg() == 0 {
 		if config.CmdHelp {

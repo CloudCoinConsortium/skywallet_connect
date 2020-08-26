@@ -122,3 +122,12 @@ func ShowError(code int, txt string) {
 	os.Exit(code)
 }
 
+func RotateLog(path string) {
+	t := time.Now()
+	datetime := t.Format("01-02-2006T15:04:05")
+	newFile := path + "." + datetime
+
+	os.Rename(path, newFile)
+}
+
+

@@ -8,7 +8,7 @@ import (
 
 
 func log(severity int, message string) {
-	if !config.CmdDebug {
+	if !config.CmdDebug && config.LogDesc == nil {
 		return
 	}
 
@@ -32,7 +32,13 @@ func log(severity int, message string) {
 
 	fmessage += " " + message
 
-	fmt.Println(fmessage)
+	if config.CmdDebug {
+		fmt.Println(fmessage)
+	}
+
+	if config.LogDesc != nil {
+		config.LogDesc.WriteString(fmessage + "\r\n")
+	}
 }
 
 func Info(message string) {
