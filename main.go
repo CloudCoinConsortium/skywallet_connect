@@ -79,21 +79,23 @@ func main() {
 		if (config.CmdHelp) {
 			fmt.Fprintf(os.Stderr, "transfer sends coins from your Sky Wallet to another Sky Wallet. You need to create an 'ID' folder in the current directory and put your Sky Wallet ID Coin there before you can use transfer\n\n")
 			fmt.Fprintf(os.Stderr, "Usage:\n")
-			fmt.Fprintf(os.Stderr, "%s [-debug] transfer <amount> <destination skywallet> <memo>\n\n", os.Args[0])
+			fmt.Fprintf(os.Stderr, "%s [-debug] transfer <amount> <destination skywallet> <memo> <idcoin>\n\n", os.Args[0])
 			fmt.Fprintf(os.Stderr, "<amount> - amount to transfer\n")
 			fmt.Fprintf(os.Stderr, "<destination skywallet> - serial number, ip address, or skywallet address of the receiver\n")
 			fmt.Fprintf(os.Stderr, "<memo> - memo\n\n")
+			fmt.Fprintf(os.Stderr, "<idcoin> - full path to the ID coin\n\n")
 			fmt.Fprintf(os.Stderr, "Example:\n")
-			fmt.Fprintf(os.Stderr, "%s transfer 10 ax2.skywallet.cc \"my memo\"\n", os.Args[0])
+			fmt.Fprintf(os.Stderr, "%s transfer 10 ax2.skywallet.cc \"my memo\" /home/user/my.skywallet.cc.stack\n", os.Args[0])
 			os.Exit(0)
 		}
-		amount, to, memo := flag.Arg(1), flag.Arg(2), flag.Arg(3)
-		cc, err := core.GetIDCoin()
+		amount, to, memo, idcoin := flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4)
+		if (amount == "" || to == "" || memo == "" || idcoin == "") {
+			core.ShowError(config.ERROR_INCORRECT_USAGE, "Amount, To, Memo and IDCoin parameters required: " + os.Args[0] + " transfer 250 destination.skywallet.cc memo")
+		}
+
+		cc, err := core.GetIDCoinFromPath(idcoin)
 		if err != nil {
 			core.ShowError(err.Code, err.Message)
-		}
-		if (amount == "" || to == "" || memo == "") {
-			core.ShowError(config.ERROR_INCORRECT_USAGE, "Amount, To and Memo parameters required: " + os.Args[0] + " transfer 250 destination.skywallet.cc memo")
 		}
 
 		t := raida.NewTransfer()

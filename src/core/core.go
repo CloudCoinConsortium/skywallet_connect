@@ -61,6 +61,22 @@ func MkDir(path string) {
 	logger.Debug("Created folder " + path)
 }
 
+func GetIDCoinFromPath(idpath string) (*cloudcoin.CloudCoin, *error.Error) {
+	_, err := os.Stat(idpath)
+	if os.IsNotExist(err) {
+		return nil, &error.Error{config.ERROR_ID_COIN_MISSING, "Failed to find ID coin"}
+	}
+	cc, err2 := cloudcoin.New(idpath)
+	if err2 != nil {
+		msg := err2.Message
+		if (err2.Code == config.ERROR_MORE_THAN_ONE_CC) {
+			msg = "The ID Coin file specified has more than one coin. Your ID coin file can have only one coin"
+		}
+		return nil, &error.Error{err2.Code, msg}
+	}
+
+	return cc, nil
+}
 
 func GetIDCoin() (*cloudcoin.CloudCoin, *error.Error) {
 	idpath := GetRootPath() + Ps() + config.DIR_ID
@@ -87,8 +103,8 @@ func GetIDCoin() (*cloudcoin.CloudCoin, *error.Error) {
 
 	logger.Debug("Foind ID coin: " + ccname)
 
-	cc := cloudcoin.New(ccname)
-	if cc == nil {
+	cc, err2 := cloudcoin.New(ccname)
+	if err2 != nil {
 		return nil, &error.Error{config.ERROR_INVALID_CLOUDCOIN_FORMAT, "Failed to parse ID Coin"}
 	}
 

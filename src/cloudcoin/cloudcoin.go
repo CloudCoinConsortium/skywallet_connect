@@ -7,7 +7,7 @@ import (
 //	"os"
 //	"io/ioutil"
 	"strconv"
-//"config"
+  "config"
 	"error"
 	"strings"
 )
@@ -23,7 +23,7 @@ type CloudCoinStack struct {
 	Stack []CloudCoin `json:"cloudcoin"`
 }
 
-func New(path string) *CloudCoin {
+func New(path string) (*CloudCoin, *error.Error) {
 
 	//ans := make([]string, 0)
 	//pans := make([]string, 0)
@@ -37,22 +37,22 @@ func New(path string) *CloudCoin {
 	}
 
 	if err != nil {
-		return nil
+		return nil, &error.Error{config.ERROR_INVALID_CLOUDCOIN_FORMAT, "Failed to parse coin"}
 	}
 
 	if len(ccStack.Stack) != 1 {
 		logger.Error("Stack File must contain only one Coin")
-		return nil
+		return nil, &error.Error{config.ERROR_MORE_THAN_ONE_CC, "Failed to parse coin"}
 	}
 
 	cc := ccStack.Stack[0]
 	
 	if !ValidateCoin(&cc) {
 		logger.Error("Coin is corrupted")
-		return nil
+		return nil, &error.Error{config.ERROR_INVALID_CLOUDCOIN_FORMAT, "Failed to parse coin"}
 	}
 
-	return &cc
+	return &cc, nil
 }
 
 func (cc *CloudCoin) GetDenomination() int {
