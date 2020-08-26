@@ -21,6 +21,7 @@ RAIDA GO Console program allows you to verify that you have received funds in yo
 
 [Withdraw](README.md#withdraw)
 
+[Balance](README.md#balance)
 
 ## -version
 example usage:
@@ -186,3 +187,8 @@ The Deposit command has not been implemented in raida_go but we could easily do 
 Receive allows you to take CloudCoins out of your Skywallet and download them to your hard drive. 
 
 The Withdraw command has not been implemented in raida_go but we could easily do this if needed. If you need the Withdraw function email CloudCoin@Protonmail.com.
+
+## Balance
+Balance allows you to see the total amount of CloudCoins in your Skywallet. 
+
+The Balance command has not been implemented in raida_go but we could easily do this if needed. If you need the Balance function email CloudCoin@Protonmail.com.
