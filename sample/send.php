@@ -5,16 +5,14 @@
       	$customer_skywallet=$_GET['customer_skywallet'];
 
 
-	$command = "/opt/raida_go view_receipt $guid $mywallet";
-	echo "<br><b>The command is:</b> $command";
+	$command = "/opt/raida_go view_receipt '$guid' $mywallet";
+	echo "<br><b>The command sent to raida_go is:</b> $command";
+	
 	$json_obj = exec($command, $outarray, $error_code);
-
-	echo "<br><b>The response:</b> <code>$json_obj</code><br>";
+	echo "<br><b>The response from raida_go:</b> <code>$json_obj</code><br>";
 
 	$arr = json_decode($json_obj, true);
 
 	echo "<br><b>$customer_skywallet sent:</b>".intval($arr["amount_verified"]);
-
-
 
 ?>
