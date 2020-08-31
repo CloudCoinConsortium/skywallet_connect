@@ -5,6 +5,11 @@ Note: Before you can run the raida_go program on Linux, you must first make it a
 ```bash
 chmod +x raida_go
 ```
+Also Note: This program will write a log file to a folder that you specify. You must give the program permissions to write to that folder. We recommend that you create a folder called "cloudcoinlogs" and give your web server write permissions to that folder. 
+```bash
+chmod 100 /path/to/cloudcoinlogs
+```
+
 RAIDA GO Console program allows you to verify that you have received funds in your Skwyallet and to send fund to another Skywallet account from your Skywallet. You can find both the Linux and Windows version at: https://CloudCoin.global/assets/raida_go.zip
 
 [-version](README.md#-version)
