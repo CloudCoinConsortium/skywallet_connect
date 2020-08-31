@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <!--<script src="https://cloudcoin.global/assets/posjs.min.js" type="text/javascript"></script>-->
+        <script src="posjs.min.js" type="text/javascript"></script>
+	
+	<script name="Skywallet Modal">
+		
+		//Construct POSJS object
+			var pos = new POSJS({
+					'timeout':'5000',
+					'action': 'action.php', 
+					'merchant_skywallet' : 'deleteme12.skywallet.cc'
+				})
+	
+		//Create an array of GET parameters that be passed to the POSJS show function and sent to the action page.		
+			var get_parameters = {};
+		
+			function openModal(){
+				get_parameters.amount = coins.value;
+				pos.show(get_parameters);// This actually opens the modal.
+			}
+		
+	</script>
+    </head>
+    <body>
+
+<a href="index.php">HOME</a>
+            <h1>Send CloudCoins to a merchant's Account named deleteme12.skywallet.cc </h1>
+<p>The key to the deleteme12.skywallet.cc account is located in the /opt folder and is called deleteme12.skywallet.cc</p>
+<p>You will need to have another Skywallet account that has some CloudCoin in it to tes this.<h2>
+	    <lable>How many CloudCoin do you want to send? Here we limit it to 1 coin for testing.</lable>
+            <input id="coins" type="number" max="1" value="1"><br>
+    
+	    <div name="Skywallet Modal">
+		<img id="cc" onclick="openModal()" src="https://cloudcoin.global/assets/cc.png"  width="100">
+	    </div>
+
+    </body>
+</html>
