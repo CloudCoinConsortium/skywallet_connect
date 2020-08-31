@@ -12,7 +12,6 @@
 	echo "<br><b>The response from raida_go:</b> <code>$json_obj</code><br>";
 
 	$arr = json_decode($json_obj, true);
-
-	echo "<br><b>$customer_skywallet sent:</b>".intval($arr["amount_verified"]);
+	echo "<br><b>raida_go verified that $customer_skywallet sent you:</b>".intval($arr["amount_verified"]);
 
 ?>
