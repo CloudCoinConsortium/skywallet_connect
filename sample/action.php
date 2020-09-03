@@ -4,7 +4,14 @@
 	$amount_due = $_GET['amount'];
 	$memo = $_GET['guid'];
 
-	$command = "/opt/raida_go view_receipt $memo $mywallet";
+	$command = "/opt/raida_go";
+	if (!file_exists($command))
+        die("Raida_go doesn't exist");
+
+	if (!is_executable($command))
+        die("Raida go is not executable for webserver user");
+
+	$command = "$command view_receipt $memo $mywallet";
 	echo "<br><b>The command is:</b> $command";
 
 	$json_obj = exec($command, $outarray, $error_code);
