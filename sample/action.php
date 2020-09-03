@@ -9,7 +9,7 @@
   		die("Raida_go doesn't exist");
 
 	if (!is_executable($command))
-  		die("Raida go is not executable for webserver user");
+  		die("Raida_go is not executable for webserver user");
 
 	$command = "$command view_receipt $memo $mywallet";
 	echo "<br><b>The command is:</b> $command";
