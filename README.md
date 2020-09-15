@@ -10,7 +10,7 @@ Also Note: This program will write a log file to a folder that you specify. You 
 chmod 100 /path/to/cloudcoinlogs
 ```
 
-RAIDA GO Console program allows you to verify that you have received funds in your Skwyallet and to send fund to another Skywallet account from your Skywallet. You can find both the Linux and Windows version at: https://CloudCoin.global/assets/raida_go.zip
+RAIDA GO Console program allows you to verify that you have received funds in your Skwyallet and to send fund to another Skywallet account from your Skywallet. You can find both the Linux and Windows version at: https://CloudCoinConsortium.com/zip/raida_go.zip
 
 [-version](README.md#-version)
 
