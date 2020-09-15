@@ -20,6 +20,7 @@ type TransferResponse struct {
 	Version string `json:"version"`
 	Time  string `json:"time"`
 	Message string `json:"message"`
+	Status string `json:"status"`
 }
 
 type TransferOutput struct {
@@ -163,13 +164,13 @@ func (v *Transfer) processTransfer(sns []int, cc *cloudcoin.CloudCoin, to int, m
     params[idx]["sns[]"] = string(ba)
   }
 
-  results := v.Raida.SendDefinedRequestPost("/service/transfer", params, BreakInBankResponse{})
+  results := v.Raida.SendDefinedRequestPost("/service/transfer", params, TransferResponse{})
   for idx, result := range results {
     if result.ErrCode == config.REMOTE_RESULT_ERROR_NONE {
-      r := result.Data.(*BreakInBankResponse)
+      r := result.Data.(*TransferResponse)
       if (r.Status == "allpass") {
         pownArray[idx] = config.RAIDA_STATUS_PASS
-      } else if (r.Status == "fail") {
+      } else if (r.Status == "allfail") {
         pownArray[idx] = config.RAIDA_STATUS_FAIL
       } else {
         pownArray[idx] = config.RAIDA_STATUS_ERROR

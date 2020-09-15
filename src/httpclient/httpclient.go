@@ -63,6 +63,7 @@ func (c *HClient) Send(nurl string, params map[string]string, doneIssued chan bo
 
 		if (strings.Contains(key, "[]")) {
 			var ba []string
+			logger.Debug("p="+element)
 			err := json.Unmarshal([]byte(element), &ba)
 			if err != nil {
 				logger.Error("Failed to exract bytes from URL parameter: " + element)

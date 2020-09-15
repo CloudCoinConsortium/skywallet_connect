@@ -22,11 +22,13 @@ RAIDA GO Console program allows you to verify that you have received funds in yo
 
 [Transfer](README.md#transfer)
 
+[Transfer](README.md#send)
+
+[Transfer](README.md#show)
+
 [Deposit](README.md#deposit)
 
 [Withdraw](README.md#withdraw)
-
-[Balance](README.md#balance)
 
 ## -version
 example usage:
@@ -51,7 +53,7 @@ raida_go [-debug] [-log logfile] <operation> <args>
 raida_go [-help]
 raida_go [-version]
 
-<operation> is one of 'view_receipt|transfer'
+<operation> is one of 'view_receipt|transfer|send|show'
 <args> arguments for operation
 
   -debug
@@ -70,6 +72,8 @@ You can add -help parameter to any specific operation
 ./raida_go -help
 ./raida_go -help view_receipt
 ./raida_go -help transfer
+./raida_go -help send
+./raida_go -help show
 ```
 
 ## -log
@@ -150,6 +154,28 @@ Example:
 $ ./raida_go transfer 2 myfriend.skywallet.cc "my memo" /home/user/my.skywallet.cc.stack
 {"amount_sent":2,"Message":"CloudCoins sent","Status":"success"}
 ```
+
+
+## Send
+
+Sends coins from a local wallet to a Sky Wallet. The coins must be put in the /home/user/CloudCoinStorage/Bank folder in Linux or C:\Users\Username\CloudCoinStorage\Bank in Windows
+
+format: ./raida_go send <amount of coins to send> <destination_skywallet> <memo>
+
+Example:
+
+```console
+$ ./raida_go send 1 axx.skywallet.cc mymemo
+{"amount_sent":1,"Message":"CloudCoins sent","Status":"success"}
+```
+
+## Show
+
+format ./raida_go show
+
+$ ./raida_go show
+{"d1":1,"d5":4,"d25":3,"d100":1,"d250":0,"total":196}
+
 
 The list of possible errors:
 

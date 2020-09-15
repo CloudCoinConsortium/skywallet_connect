@@ -2,7 +2,7 @@ package core
 
 
 import (
-	//"os/user"
+	"os/user"
 	"logger"
 	"config"
 	"os"
@@ -11,11 +11,12 @@ import (
 	"error"
 	"fmt"
 	"time"
+	"strings"
+	"strconv"
 )
 
 
 func GetRootPath() string {
-	/*
 	root, err := user.Current()
 	if err != nil {
 		logger.Error("Failed to get current user")
@@ -23,7 +24,7 @@ func GetRootPath() string {
 	}
 
 	return root.HomeDir + Ps() + config.TOPDIR
-	*/
+	/*
 	path, err := os.Getwd()
 	if err != nil {
 		logger.Error("Failed to find current directory")
@@ -31,15 +32,93 @@ func GetRootPath() string {
 	}
 
 	return path
+	*/
 }
 
 
-func MkDirs() {
-	//rootDir := GetRootPath()
+func GetSNSFromFolder(folder string) (map[int]string, *error.Error) {
+	logger.Debug("Reading dir " + folder)
 
-//	MkDir(rootDir)
-//	MkDir(rootDir + Ps() + config.DIR_ID)
+	_, err := os.Stat(folder)
+	if os.IsNotExist(err) {
+		return nil, &error.Error{config.ERROR_READ_DIRECTORY, "Folder does not exist"}
+	}
 
+	files, err := ioutil.ReadDir(folder)
+	if err != nil {
+		return nil, &error.Error{config.ERROR_READ_DIRECTORY, "Failed to read folder " +  folder}
+	}
+
+	sns := make(map[int]string)
+	for _, f := range files {
+		fname := f.Name()
+		if !strings.HasSuffix(fname, ".stack") {
+			logger.Debug("Skipping file " + fname)
+			continue
+		}
+
+		s := strings.Split(fname, ".")
+		if (len(s) < 4) {
+			logger.Debug("Skipping file " + fname + " Can't parse its name")
+			continue
+		}
+
+		sn := s[3]
+		isn, err := strconv.Atoi(sn)
+		if err != nil {
+			logger.Debug("Skipping file " + fname + " Can't parse its SN")
+			continue
+		}
+
+		sns[isn] = folder + Ps() + fname
+	}
+
+	return sns, nil
+
+
+}
+
+func CreateFolders() {
+	rootDir := GetRootPath()
+
+	MkDir(rootDir)
+	MkDir(rootDir + Ps() + config.DIR_BANK)
+	MkDir(rootDir + Ps() + config.DIR_FRACKED)
+	MkDir(rootDir + Ps() + config.DIR_SENT)
+	MkDir(rootDir + Ps() + config.DIR_COUNTERFEIT)
+}
+
+func MoveCoinToCounterfeit(cc cloudcoin.CloudCoin) {
+	newPath := GetCounterfeitDir() + Ps() + cc.GetName()
+	logger.Debug("Moving " + string(cc.Sn) + " to Counterfeit: " + cc.Path + " to " + newPath)
+
+	err := os.Rename(cc.Path, newPath)
+	if err != nil {
+		logger.Error("Failed to rename: " + err.Error())
+	}
+}
+func MoveCoinToSent(cc cloudcoin.CloudCoin) {
+	newPath := GetSentDir() + Ps() + cc.GetName()
+	logger.Debug("Moving " + string(cc.Sn) + " to Sent: " + cc.Path + " to " + newPath)
+
+	err := os.Rename(cc.Path, newPath)
+	if err != nil {
+		logger.Error("Failed to rename: " + err.Error())
+	}
+}
+
+func GetBankDir() string {
+	return GetRootPath() + Ps() + config.DIR_BANK
+}
+
+func GetFrackedDir() string {
+	return GetRootPath() + Ps() + config.DIR_FRACKED
+}
+func GetCounterfeitDir() string {
+	return GetRootPath() + Ps() + config.DIR_COUNTERFEIT
+}
+func GetSentDir() string {
+	return GetRootPath() + Ps() + config.DIR_SENT
 }
 
 func Ps() string {
@@ -55,7 +134,7 @@ func MkDir(path string) {
 	err = os.Mkdir(path, 0700)
 	if err != nil {
 			logger.Error("Failed to create " + path)
-			panic("Failed to create " + path)
+			panic("Failed to create folder " + path)
 	}
 
 	logger.Debug("Created folder " + path)
@@ -78,6 +157,7 @@ func GetIDCoinFromPath(idpath string) (*cloudcoin.CloudCoin, *error.Error) {
 	return cc, nil
 }
 
+/*
 func GetIDCoin() (*cloudcoin.CloudCoin, *error.Error) {
 	idpath := GetRootPath() + Ps() + config.DIR_ID
 
@@ -102,7 +182,7 @@ func GetIDCoin() (*cloudcoin.CloudCoin, *error.Error) {
 	}
 
 	logger.Debug("Foind ID coin: " + ccname)
-
+G
 	cc, err2 := cloudcoin.New(ccname)
 	if err2 != nil {
 		return nil, &error.Error{config.ERROR_INVALID_CLOUDCOIN_FORMAT, "Failed to parse ID Coin"}
@@ -110,7 +190,7 @@ func GetIDCoin() (*cloudcoin.CloudCoin, *error.Error) {
 
 	return cc, nil
 }
-
+*/
 func JsonError(code int, txt string) string {
 	var str = fmt.Sprintf("{\"status\":\"fail\", \"code\":%d \"message\":\"%s\", \"time\":\"%s\"}", code, txt, time.Since(time.Now()))
 
@@ -128,6 +208,20 @@ func RotateLog(path string) {
 	newFile := path + "." + datetime
 
 	os.Rename(path, newFile)
+}
+
+func SaveToBank(cc cloudcoin.CloudCoin) *error.Error {
+	data := []byte(cc.GetContent())
+	fileName := GetBankDir() + Ps() + cc.GetName()
+
+	logger.Debug("Saving " + fileName)
+	err := ioutil.WriteFile(fileName, data, 0644)
+	if err != nil {
+		logger.Error("Failed to write to file: " + string(err.Error()))
+		return &error.Error{config.ERROR_WRITE_FILE, "Failed to write to file: " + string(err.Error())}
+	}
+
+	return nil
 }
 
 

@@ -42,8 +42,15 @@ const (
 
 
 const TOPDIR = "CloudCoinStorage"
+const DIR_BANK = "Bank"
+const DIR_FRACKED = "Fracked"
+const DIR_SENT = "Sent"
+const DIR_COUNTERFEIT = "Counterfeit"
 
-const DIR_ID = "ID"
+
+const TYPE_STACK = 1
+const TYPE_PNG = 4
+
 
 const MAX_LOG_SIZE = 50000000
 
@@ -83,3 +90,5 @@ const ERROR_TRANSFER_FAILED = 24
 const ERROR_INVALID_RECEIPT_ID = 25
 const ERROR_INVALID_SKYWALLET_OWNER = 26
 const ERROR_MORE_THAN_ONE_CC = 27
+const ERROR_BREAK_FAILED = 28
+const ERROR_WRITE_FILE = 29

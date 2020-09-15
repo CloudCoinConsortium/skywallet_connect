@@ -8,6 +8,7 @@ import(
 	"config"
 	"cloudcoin"
 	"error"
+	"core"
 )
 
 type Servant struct {
@@ -144,6 +145,72 @@ func (s *Servant) GetSNsOverlap(sns [][]int) ([]int, int) {
 	}
 
 	return rsns, total
+}
+
+func (s *Servant) GetCoinsFromDirs(amountInt int) ([]cloudcoin.CloudCoin, *cloudcoin.CloudCoin, *error.Error) {
+	var extraCC *cloudcoin.CloudCoin
+
+  snsMap, _ := s.ReadSNSFromDirs()
+	keys := make([]int, 0, len(snsMap))
+	for k := range snsMap {
+		keys = append(keys, k)
+	}
+
+  nsns, extra, err3 := s.PickCoinsFromArray(keys, amountInt)
+  if err3 != nil {
+    logger.Debug("Failed to pick coins: " + err3.Message)
+    return nil, nil, &error.Error{config.ERROR_PICK_COINS_AFTER_SHOW, "Failed to pick coins: " + err3.Message}
+  }
+
+	extraCC = nil
+	if extra != 0 {
+		logger.Debug("Need Extra Coin " + strconv.Itoa(extra))
+		fname := snsMap[extra]
+		cc, err4 := cloudcoin.New(fname)
+		if err4 != nil {
+	    return nil, nil, &error.Error{config.ERROR_READ_FILE, "Failed to read file " + fname}
+		}
+
+		extraCC = cc
+		logger.Debug("Got Extra Coin " + fname)
+	}
+
+	ccs := make([]cloudcoin.CloudCoin, 0, len(nsns))
+	for _, v := range nsns {
+		fname := snsMap[v]
+
+		cc, err5 := cloudcoin.New(fname)
+		if err5 != nil {
+	    return nil, nil, &error.Error{config.ERROR_READ_FILE, "Failed to read file " + fname}
+		}
+
+		ccs = append(ccs, *cc)
+	}
+
+
+	return ccs, extraCC, nil
+}
+
+func (s *Servant) ReadSNSFromDirs() (map[int]string, *error.Error) {
+	var sns, snsf map[int]string
+	var err *error.Error
+
+	sns, err = core.GetSNSFromFolder(core.GetBankDir())
+	if err != nil {
+		logger.Error("Failed to read Bank dir")
+	}
+
+	snsf, err = core.GetSNSFromFolder(core.GetFrackedDir())
+	if err != nil {
+		logger.Error("Failed to read Fracked dir")
+	}
+
+	for k, v := range snsf {
+		sns[k] = v
+	}
+
+	return sns, nil
+
 }
 
 func (s *Servant) PickCoinsFromArray(sns []int, amount int) ([]int, int, *error.Error) {
@@ -344,4 +411,18 @@ func (s *Servant) GetExpCoins(sns []int, amount int) (map[int]int, *error.Error)
 
 func (s *Servant) AddSNToRepairArray(raidaIdx int, sn int) {
 	s.repairArray[raidaIdx] = append(s.repairArray[raidaIdx], sn)
+}
+
+func (s *Servant) SetCoinsStatus(ccs []cloudcoin.CloudCoin, idx int, status int) {
+	for _, cc := range ccs {
+		s.SetCoinStatus(cc, idx, status)
+	}
+}
+
+func (s *Servant) SetCoinStatusInArray(ccs []cloudcoin.CloudCoin, aIdx int, raidaIdx int, status int) {
+	ccs[aIdx].SetDetectStatus(raidaIdx, status)
+}
+
+func (s *Servant) SetCoinStatus(cc cloudcoin.CloudCoin, idx int, status int) {
+	cc.SetDetectStatus(idx, status)
 }

@@ -10,14 +10,14 @@ import (
 	"core"
 )
 
-const VERSION = "0.0.3"
+const VERSION = "0.0.5"
 
 func Usage() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "%s [-debug] [-log logfile] <operation> <args>\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "%s [-help]\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "%s [-version]\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\n<operation> is one of 'view_receipt|transfer'\n")
+		fmt.Fprintf(os.Stderr, "\n<operation> is one of 'view_receipt|transfer|send|inventory'\n")
 		fmt.Fprintf(os.Stderr, "<args> arguments for operation\n\n")
 		flag.PrintDefaults()
 }
@@ -64,7 +64,7 @@ func main() {
 		core.ShowError(config.ERROR_INCORRECT_USAGE, "Operation is not specified")
 	}
 
-	core.MkDirs()
+	core.CreateFolders()
 
 	operation := flag.Arg(0)
 	if operation == "view_receipt" {
@@ -90,6 +90,30 @@ func main() {
 			core.ShowError(err.Code, err.Message)
 		}
 
+		fmt.Println(response)
+	} else if operation == "send" {
+		if (config.CmdHelp) {
+				fmt.Fprintf(os.Stderr, "send command transfers coins from your local wallet to a remote Sky Wallet\n\n")
+				fmt.Fprintf(os.Stderr, "Usage:\n")
+				fmt.Fprintf(os.Stderr, "%s [-debug] send <amount> <destination skywallet> <memo>\n\n", os.Args[0])
+				fmt.Fprintf(os.Stderr, "<amount> - amount to transfer\n")
+				fmt.Fprintf(os.Stderr, "<destination skywallet> - serial number, ip address, or skywallet address of the receiver\n")
+				fmt.Fprintf(os.Stderr, "<memo> - memo\n\n")
+				fmt.Fprintf(os.Stderr, "Example:\n")
+				fmt.Fprintf(os.Stderr, "%s send 10 ax2.skywallet.cc \"my memo\"\n", os.Args[0])
+				os.Exit(0)
+		}
+
+		amount, to, memo := flag.Arg(1), flag.Arg(2), flag.Arg(3)
+		if (amount == "" || to == "" || memo == "") {
+			core.ShowError(config.ERROR_INCORRECT_USAGE, "Amount, To, Memo parameters required: " + os.Args[0] + " send 250 destination.skywallet.cc memo")
+		}
+
+		s := raida.NewSender()
+		response, err := s.Send(amount, to, memo)
+		if err != nil {
+			core.ShowError(err.Code, err.Message)
+		}
 		fmt.Println(response)
 	} else if operation == "transfer" {
 		if (config.CmdHelp) {
@@ -121,6 +145,23 @@ func main() {
 		}
 		fmt.Println(response)
 
+	} else if operation == "show" {
+		if (config.CmdHelp) {
+				fmt.Fprintf(os.Stderr, "show command shows coins int your local wallet\n\n")
+				fmt.Fprintf(os.Stderr, "Usage:\n")
+				fmt.Fprintf(os.Stderr, "%s [-debug] show <localwallet>\n\n", os.Args[0])
+				fmt.Fprintf(os.Stderr, "<localwallet> local wallet (optional)\n")
+				fmt.Fprintf(os.Stderr, "Example:\n")
+				fmt.Fprintf(os.Stderr, "%s mywallet\n", os.Args[0])
+				os.Exit(0)
+		}
+
+		s := raida.NewShowCoins()
+		response, err := s.ShowCoins()
+		if err != nil {
+			core.ShowError(err.Code, err.Message)
+		}
+		fmt.Println(response)
 	} else {
 
 		core.ShowError(config.ERROR_INCORRECT_USAGE, "Invalid command")
