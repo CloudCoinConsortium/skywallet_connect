@@ -22,9 +22,9 @@ RAIDA GO Console program allows you to verify that you have received funds in yo
 
 [Transfer](README.md#transfer)
 
-[Transfer](README.md#send)
+[Send](README.md#send)
 
-[Transfer](README.md#show)
+[Show](README.md#show)
 
 [Deposit](README.md#deposit)
 
@@ -171,11 +171,14 @@ $ ./raida_go send 1 axx.skywallet.cc mymemo
 
 ## Show
 
+Shows the inventory
+
 format ./raida_go show
 
+```console
 $ ./raida_go show
 {"d1":1,"d5":4,"d25":3,"d100":1,"d250":0,"total":196}
-
+```
 
 The list of possible errors:
 
