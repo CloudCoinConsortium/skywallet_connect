@@ -1,6 +1,6 @@
 # raidaGo
 
-
+![Skywallet](http://raidatech.com/img/skywallet.png)
 Note: Before you can run the raida_go program on Linux, you must first make it an executable by running: 
 ```bash
 chmod +x raida_go
