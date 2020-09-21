@@ -119,8 +119,10 @@ func (v *Transfer) Transfer(cc *cloudcoin.CloudCoin, amount string, to string, m
 		}
 	}
 
-	if err := v.processTransfer(bufSns, cc, to_sn, memo); err != nil {
-		return "", err
+	if (len(bufSns) != 0) {
+		if err := v.processTransfer(bufSns, cc, to_sn, memo); err != nil {
+			return "", err
+		}
 	}
 
 	//fmt.Printf("v=%d %d %v\n",total, extra, nsns)

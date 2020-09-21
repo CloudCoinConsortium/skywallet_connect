@@ -10,7 +10,7 @@ import (
 	"core"
 )
 
-const VERSION = "0.0.5"
+const VERSION = "0.0.6"
 
 func Usage() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])

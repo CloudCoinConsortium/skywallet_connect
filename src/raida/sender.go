@@ -139,8 +139,10 @@ func (v *Sender) Send(amount string, to string, memo string) (string, *error.Err
 		}
 	}
 
-	if err := v.processSend(bufCCs, to_sn, memo); err != nil {
-		return "", err
+	if (len(bufCCs) != 0) {
+		if err := v.processSend(bufCCs, to_sn, memo); err != nil {
+			return "", err
+		}
 	}
 
 
