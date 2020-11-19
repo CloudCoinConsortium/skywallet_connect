@@ -223,6 +223,18 @@ Receive allows you to take CloudCoins out of your Skywallet and download them to
 The Withdraw command has not been implemented in raida_go but we could easily do this if needed. If you need the Withdraw function email CloudCoin@Protonmail.com.
 
 ## Balance
-Balance allows you to see the total amount of CloudCoins in your Skywallet. 
+Balance allows you to see the total amount of CloudCoins in your Skywallet. It can also be used to see the balance in another skywallet if they give you the AN of one of their ID Coins.
 
-The Balance command has not been implemented in raida_go but we could easily do this if needed. If you need the Balance function email CloudCoin@Protonmail.com.
+Sample call of the ID coin in your ID folder:
+```
+Linux: 
+$ ./raida_go balance
+
+Windows: 
+raida_go.exe balance
+```
+Sample call of another person's account using their "view balance" key:
+```
+Linux: 
+$ ./raida_go balance
+```
