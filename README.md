@@ -226,7 +226,7 @@ The Withdraw command has not been implemented in raida_go but we could easily do
 Balance allows you to see the total amount of CloudCoins in your Skywallet. It can also be used to see the balance in another skywallet if they give you the AN of one of their ID Coins.
 
 Sample call of the ID coin in your ID folder:
-```
+```bash
 Linux: 
 $ ./raida_go balance
 
@@ -234,7 +234,13 @@ Windows:
 raida_go.exe balance
 ```
 Sample call of another person's account using their "view balance" key:
-```
+```bash
 Linux: 
-$ ./raida_go balance
+./raida_go balance sean.CloudCoin.global 1.15.ddf82992e895449da47d2ddf52d7dc5f 1.24.9843782885464e48aed29542710ef98c
 ```
+where "sean.cloudcoin.global" is the user's account, The '1' is the network number, the '15 and '24' are the RAIDA Numbers and the GUIDs are ANs also know as the Access Key  and backup Access Key. These keys can be given to others to check the balance.
+
+raida go will respond like this:
+```bash
+{"total":5448509}
+``` 
