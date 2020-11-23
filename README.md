@@ -263,6 +263,6 @@ $ ./raida_go balance
 ```
 Same Example in Windows:
 ```console
-C:\xampp\htdocs\cloudcoin\raida_go.exe view_receipt balance
+# C:\xampp\htdocs\cloudcoin\raida_go.exe balance
 {"total":2798}
 ```
