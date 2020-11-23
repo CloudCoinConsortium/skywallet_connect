@@ -5,8 +5,8 @@ import (
 )
 
 
-const DEFAULT_TIMEOUT = 5
-const DEFAULT_DOMAIN = "cloudcoin.global"
+var DEFAULT_TIMEOUT = 50
+var DEFAULT_DOMAIN = "cloudcoin.global"
 
 
 const LOG_LEVEL_DEBUG = 3
@@ -22,6 +22,8 @@ const REMOTE_RESULT_ERROR_SKIPPED = 3
 const DEFAULT_NN = 1
 const PUBLIC_CHANGE_MAKER_ID = 2
 
+var MAX_FIXTRANSFER_NOTES = 400
+
 var CmdDebug bool
 var CmdHelp bool
 var CmdVersion bool
@@ -31,6 +33,7 @@ var CmdLogfile string
 var LogDesc *os.File
 
 const TOTAL_RAIDA_NUMBER = 25
+const NEED_VOTERS_FOR_BALANCE = 17
 
 const (
 	RAIDA_STATUS_UNTRIED = 0
@@ -41,16 +44,20 @@ const (
 )
 
 
-const TOPDIR = "CloudCoinStorage"
+const TOPDIR = "raida_go"
 const DIR_BANK = "Bank"
 const DIR_FRACKED = "Fracked"
 const DIR_SENT = "Sent"
 const DIR_COUNTERFEIT = "Counterfeit"
+const DIR_ID = "ID"
 
 
 const TYPE_STACK = 1
 const TYPE_PNG = 4
 
+
+const LOG_FILENAME = "main.log"
+const CONFIG_FILENAME = "config.toml"
 
 const MAX_LOG_SIZE = 50000000
 
@@ -92,3 +99,4 @@ const ERROR_INVALID_SKYWALLET_OWNER = 26
 const ERROR_MORE_THAN_ONE_CC = 27
 const ERROR_BREAK_FAILED = 28
 const ERROR_WRITE_FILE = 29
+const ERROR_CONFIG_PARSE = 30

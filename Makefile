@@ -1,7 +1,7 @@
 PROJECT_NAME=raida_go
 
 GOBASE=$(shell pwd)
-GOPATH=$(GOBASE)/vendor:$(GOBASE)
+GOPATH=$(GOBASE)/vendor:$(GOBASE):/home/alexander/go
 GOFILES=$(wildcard *.go)
 
 all: build buildwin

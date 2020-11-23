@@ -9,6 +9,7 @@ import (
 	"cloudcoin"
 	"error"
 //	"fmt"
+//	"os"
 )
 
 type Transfer struct {
@@ -53,7 +54,7 @@ func (v *Transfer) Transfer(cc *cloudcoin.CloudCoin, amount string, to string, m
 	logger.Debug("Started Transfer " + amount + " to " + to + " (" + strconv.Itoa(to_sn) + ") memo " + memo)
 
 	s := NewShow()
-	sns, total, err3 := s.Show(cc)
+	sns, total, err3 := s.ShowBrief(cc)
 	if err3 != nil {
 		logger.Error(err3.Message)
 		return "", &error.Error{config.ERROR_SHOW_COINS_FAILED, "Failed to Show Coins"}
@@ -174,7 +175,10 @@ func (v *Transfer) processTransfer(sns []int, cc *cloudcoin.CloudCoin, to int, m
         pownArray[idx] = config.RAIDA_STATUS_PASS
       } else if (r.Status == "allfail") {
         pownArray[idx] = config.RAIDA_STATUS_FAIL
-      } else {
+      } else if (r.Status == "mixed") {
+				// We need to tell that if there is one error the whole operation is treated as errornous
+        pownArray[idx] = config.RAIDA_STATUS_ERROR
+			} else {
         pownArray[idx] = config.RAIDA_STATUS_ERROR
       }
     } else if (result.ErrCode == config.REMOTE_RESULT_ERROR_TIMEOUT) {

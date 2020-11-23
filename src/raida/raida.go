@@ -72,19 +72,23 @@ func (r *RAIDA) SendRequest(url string, params map[string]string, i interface{})
 	return results
 }
 
+func (r *RAIDA) SendDefinedRequestRaw(url string, params []map[string]string) ([]Result) {
+	return r.sendDefinedRequest(url, params, nil, true, false, true)
+}
+
 func (r *RAIDA) SendDefinedRequestNoWait(url string, params []map[string]string, i interface{}) ([]Result) {
-	return r.sendDefinedRequest(url, params, i, false, false)
+	return r.sendDefinedRequest(url, params, i, false, false, false)
 }
 
 func (r *RAIDA) SendDefinedRequest(url string, params []map[string]string, i interface{}) ([]Result) {
-	return r.sendDefinedRequest(url, params, i, true, false)
+	return r.sendDefinedRequest(url, params, i, true, false, false)
 }
 
 func (r *RAIDA) SendDefinedRequestPost(url string, params []map[string]string, i interface{}) ([]Result) {
-	return r.sendDefinedRequest(url, params, i, true, true)
+	return r.sendDefinedRequest(url, params, i, true, true, false)
 }
 
-func (r *RAIDA) sendDefinedRequest(url string, params []map[string]string, i interface{}, wait bool, post bool) ([]Result) {
+func (r *RAIDA) sendDefinedRequest(url string, params []map[string]string, i interface{}, wait bool, post bool, raw bool) ([]Result) {
 	logger.Info("Doing request " + url)
 
 	done := make(chan Result)
@@ -106,9 +110,16 @@ func (r *RAIDA) sendDefinedRequest(url string, params []map[string]string, i int
 				}(idx)
 				continue
 			}
-			go func(agent DetectionAgent, idx int) {
-				agent.SendRequest(url, params[idx], done, doneIssued, post, reflect.TypeOf(i))
-			}(agent, idx)
+
+			if (raw) {
+				go func(agent DetectionAgent, idx int) {
+					agent.SendRequestRaw(url, params[idx], done, doneIssued, post)
+				}(agent, idx)
+			} else {
+				go func(agent DetectionAgent, idx int) {
+					agent.SendRequest(url, params[idx], done, doneIssued, post, reflect.TypeOf(i))
+				}(agent, idx)
+			}
 	}
 
 	if !wait {

@@ -18,6 +18,8 @@ RAIDA GO Console program allows you to verify that you have received funds in yo
 
 [-debug](README.md#-debug)
 
+[Config](README.md#config)
+
 [View_Receipt](README.md#view_receipt)
 
 [Transfer](README.md#transfer)
@@ -29,6 +31,8 @@ RAIDA GO Console program allows you to verify that you have received funds in yo
 [Deposit](README.md#deposit)
 
 [Withdraw](README.md#withdraw)
+
+[Balance](README.md#balance)
 
 ## -version
 example usage:
@@ -53,7 +57,7 @@ raida_go [-debug] [-log logfile] <operation> <args>
 raida_go [-help]
 raida_go [-version]
 
-<operation> is one of 'view_receipt|transfer|send|show'
+<operation> is one of 'view_receipt|transfer|send|show|balance'
 <args> arguments for operation
 
   -debug
@@ -74,22 +78,34 @@ You can add -help parameter to any specific operation
 ./raida_go -help transfer
 ./raida_go -help send
 ./raida_go -help show
+./raida_go -help balance
 ```
 
-## -log
-Log can be used to see what is happening within the program when issuing a command. This will create a log file that you can read. 
-Please do not put the log file where there are no permissions to write. 
-Sample use:
-```
-C:\>raida_go.exe -logfile E:\log.txt view_receipt 080A4CE89126F4F1B93E4745F89F6713 demo.skywallet.cc
-```
-Sample Response:
-```
-{"amount_verified":0,"status":"success","message":"CloudCoins verified"}
-```
-Sample Response if put in a folder with no write permissions:
-```
-{"status":"fail", "code":1 "message":"Failed to open logfile", "time":"0s"}
+## Config
+You can configure the behaviour of the RaidaGo by using a configuration file. The file must be placed in your raida_go folder. This folder is located in the user's directory.
+
+For Linux:
+/home/user/raida_go/config.toml
+
+For Windows:
+c:\Users\User\raida_go\config.toml
+
+The file is in TOML format (https://en.wikipedia.org/wiki/TOML):
+Only three directives are supported at the moment
+
+```toml
+title = "RaidaGo Configuration File"
+  
+[main]
+# connection and read timeout
+timeout = 40
+
+# main domain name
+main_domain = "cloudcoin.global"
+
+# max number of notes that can be trasferred at a time
+max_fixtransfer_notes = 400
+
 ```
 
 ## View Receipt
@@ -225,4 +241,12 @@ The Withdraw command has not been implemented in raida_go but we could easily do
 ## Balance
 Balance allows you to see the total amount of CloudCoins in your Skywallet. 
 
-The Balance command has not been implemented in raida_go but we could easily do this if needed. If you need the Balance function email CloudCoin@Protonmail.com.
+```console
+$ ./raida_go balance
+{"total":2798}
+```
+Same Example in Windows:
+```console
+C:\xampp\htdocs\cloudcoin\raida_go.exe view_receipt balance
+{"total":2798}
+```

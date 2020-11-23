@@ -121,6 +121,15 @@ func GetSentDir() string {
 	return GetRootPath() + Ps() + config.DIR_SENT
 }
 
+func GetLogPath() string {
+	return GetRootPath() + Ps() + config.LOG_FILENAME
+}
+
+func GetConfigPath() string {
+	return GetRootPath() + Ps() + config.CONFIG_FILENAME
+}
+
+
 func Ps() string {
 	return string(os.PathSeparator)
 }
@@ -157,13 +166,47 @@ func GetIDCoinFromPath(idpath string) (*cloudcoin.CloudCoin, *error.Error) {
 	return cc, nil
 }
 
-/*
+func InitLog() {
+		logFilePath := GetLogPath()
+    stat, _ := os.Stat(logFilePath)
+    if stat != nil {
+      if (stat.Size() > config.MAX_LOG_SIZE) {
+        RotateLog(logFilePath)
+      }
+    }
+
+    file, err0 := os.OpenFile(logFilePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644);
+    if err0 != nil {
+      ShowError(config.ERROR_INCORRECT_USAGE, "Failed to open logfile")
+    }
+
+    config.LogDesc = file
+}
+
+func ReadConfig() {
+	configFilePath := GetConfigPath()
+	var content []byte
+
+	content, err := ioutil.ReadFile(configFilePath)
+	if err != nil {
+		logger.Debug("Failed to read config: " + configFilePath)
+		return
+	}
+
+	err2 := config.Apply(string(content))
+	if err2 != nil {
+		logger.Debug("Failed to parse config: " + err2.Message)
+		return
+	}
+}
+
+
 func GetIDCoin() (*cloudcoin.CloudCoin, *error.Error) {
 	idpath := GetRootPath() + Ps() + config.DIR_ID
 
 	_, err := os.Stat(idpath)
 	if os.IsNotExist(err) {
-		return nil, &error.Error{config.ERROR_ID_COIN_MISSING, "Failed to find ID coin, please create a folder called ID in the same folder as your raida_go program. Place one ID coins in that folder"}
+		return nil, &error.Error{config.ERROR_ID_COIN_MISSING, "Failed to find ID coin"}
 	}
 
 	files, err := ioutil.ReadDir(idpath)
@@ -178,11 +221,10 @@ func GetIDCoin() (*cloudcoin.CloudCoin, *error.Error) {
 	}
 
 	if ccname == "" {
-		return nil, &error.Error{config.ERROR_ID_COIN_MISSING, "Failed to find ID coin, please create a folder called ID in the same folder as your raida_go program. Place one ID coins in that folder"}
+		return nil, &error.Error{config.ERROR_ID_COIN_MISSING, "Failed to find ID coin"}
 	}
 
-	logger.Debug("Foind ID coin: " + ccname)
-G
+	logger.Debug("Found ID coin: " + ccname)
 	cc, err2 := cloudcoin.New(ccname)
 	if err2 != nil {
 		return nil, &error.Error{config.ERROR_INVALID_CLOUDCOIN_FORMAT, "Failed to parse ID Coin"}
@@ -190,7 +232,7 @@ G
 
 	return cc, nil
 }
-*/
+
 func JsonError(code int, txt string) string {
 	var str = fmt.Sprintf("{\"status\":\"fail\", \"code\":%d \"message\":\"%s\", \"time\":\"%s\"}", code, txt, time.Since(time.Now()))
 
@@ -199,6 +241,7 @@ func JsonError(code int, txt string) string {
 
 func ShowError(code int, txt string) {
 	fmt.Printf("%s", JsonError(code, txt))
+	logger.Error(JsonError(code, txt))
 	os.Exit(code)
 }
 

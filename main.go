@@ -3,21 +3,24 @@ package main
 import (
 	"fmt"
 	"raida"
-	//"logger"
+	"logger"
 	"flag"
 	"config"
 	"os"
 	"core"
+	"strings"
+	"cloudcoin"
+	"error"
 )
 
-const VERSION = "0.0.6"
+const VERSION = "0.0.9"
 
 func Usage() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "%s [-debug] [-log logfile] <operation> <args>\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "%s [-debug] <operation> <args>\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "%s [-help]\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "%s [-version]\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\n<operation> is one of 'view_receipt|transfer|send|inventory'\n")
+		fmt.Fprintf(os.Stderr, "\n<operation> is one of 'view_receipt|transfer|send|inventory|balance'\n")
 		fmt.Fprintf(os.Stderr, "<args> arguments for operation\n\n")
 		flag.PrintDefaults()
 }
@@ -29,7 +32,6 @@ func Version() {
 func main() {
 	//flag.StringVar(&config.CmdCommand, "", "", "Operation")
 	flag.BoolVar(&config.CmdDebug, "debug", false, "Display Debug Information")
-	flag.StringVar(&config.CmdLogfile, "logfile", "", "Logfile path")
 	flag.BoolVar(&config.CmdHelp, "help", false, "Show Usage")
 	flag.BoolVar(&config.CmdVersion, "version", false, "Display version")
 	flag.Usage = Usage
@@ -40,21 +42,6 @@ func main() {
 		os.Exit(0)
 	}
 
-	if config.CmdLogfile != "" {
-		stat, _ := os.Stat(config.CmdLogfile)
-	  if stat != nil {
-			if (stat.Size() > config.MAX_LOG_SIZE) {
-				core.RotateLog(config.CmdLogfile)
-			}
-		}
-
-	  file, err0 := os.OpenFile(config.CmdLogfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644);
-	  if err0 != nil {
-			core.ShowError(config.ERROR_INCORRECT_USAGE, "Failed to open logfile")
-		}
-
-		config.LogDesc = file
-	}
 
 	if flag.NArg() == 0 {
 		if config.CmdHelp {
@@ -65,6 +52,11 @@ func main() {
 	}
 
 	core.CreateFolders()
+	core.InitLog()
+	core.ReadConfig()
+
+	logger.Debug("Program started")
+	logger.Debug(strings.Join(os.Args, " "))
 
 	operation := flag.Arg(0)
 	if operation == "view_receipt" {
@@ -119,21 +111,28 @@ func main() {
 		if (config.CmdHelp) {
 			fmt.Fprintf(os.Stderr, "transfer sends coins from your Sky Wallet to another Sky Wallet. You need to create an 'ID' folder in the current directory and put your Sky Wallet ID Coin there before you can use transfer\n\n")
 			fmt.Fprintf(os.Stderr, "Usage:\n")
-			fmt.Fprintf(os.Stderr, "%s [-debug] transfer <amount> <destination skywallet> <memo> <idcoin>\n\n", os.Args[0])
+			fmt.Fprintf(os.Stderr, "%s [-debug] transfer <amount> <destination skywallet> <memo> [<idcoin>]\n\n", os.Args[0])
 			fmt.Fprintf(os.Stderr, "<amount> - amount to transfer\n")
 			fmt.Fprintf(os.Stderr, "<destination skywallet> - serial number, ip address, or skywallet address of the receiver\n")
 			fmt.Fprintf(os.Stderr, "<memo> - memo\n\n")
-			fmt.Fprintf(os.Stderr, "<idcoin> - full path to the ID coin\n\n")
+			fmt.Fprintf(os.Stderr, "<idcoin> - full path to the ID coin. If not defined it will be taken from the ID folder\n\n")
 			fmt.Fprintf(os.Stderr, "Example:\n")
 			fmt.Fprintf(os.Stderr, "%s transfer 10 ax2.skywallet.cc \"my memo\" /home/user/my.skywallet.cc.stack\n", os.Args[0])
 			os.Exit(0)
 		}
-		amount, to, memo, idcoin := flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4)
-		if (amount == "" || to == "" || memo == "" || idcoin == "") {
-			core.ShowError(config.ERROR_INCORRECT_USAGE, "Amount, To, Memo and IDCoin parameters required: " + os.Args[0] + " transfer 250 destination.skywallet.cc memo")
+		amount, to, memo := flag.Arg(1), flag.Arg(2), flag.Arg(3)
+		if (amount == "" || to == "" || memo == "") {
+			core.ShowError(config.ERROR_INCORRECT_USAGE, "Amount, To, Memoparameters required: " + os.Args[0] + " transfer 250 destination.skywallet.cc memo")
 		}
 
-		cc, err := core.GetIDCoinFromPath(idcoin)
+		var cc *cloudcoin.CloudCoin
+		var err *error.Error
+		if (flag.NArg() == 4) {
+			cc, err = core.GetIDCoin()
+		} else {
+			idcoin := flag.Arg(4)
+			cc, err = core.GetIDCoinFromPath(idcoin)
+		}
 		if err != nil {
 			core.ShowError(err.Code, err.Message)
 		}
@@ -158,6 +157,31 @@ func main() {
 
 		s := raida.NewShowCoins()
 		response, err := s.ShowCoins()
+		if err != nil {
+			core.ShowError(err.Code, err.Message)
+		}
+		fmt.Println(response)
+	} else if operation == "balance" {
+		if (config.CmdHelp) {
+				fmt.Fprintf(os.Stderr, "balance command shows your skywallet balance\n\n")
+				fmt.Fprintf(os.Stderr, "Usage:\n")
+				fmt.Fprintf(os.Stderr, "<idcoin> - full path to the ID coin. If not defined it will be taken from the ID folder\n\n")
+				os.Exit(0)
+		}
+		var cc *cloudcoin.CloudCoin
+		var err *error.Error
+		if (flag.NArg() == 1) {
+			cc, err = core.GetIDCoin()
+		} else {
+			idcoin := flag.Arg(1)
+			cc, err = core.GetIDCoinFromPath(idcoin)
+		}
+		if err != nil {
+			core.ShowError(err.Code, err.Message)
+		}
+
+		b := raida.NewShowTransferBalance()
+		response, err := b.ShowTransferBalance(cc)
 		if err != nil {
 			core.ShowError(err.Code, err.Message)
 		}

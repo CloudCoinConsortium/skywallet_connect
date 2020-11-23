@@ -4,6 +4,7 @@ import (
 	"logger"
 	"encoding/json"
 	"strconv"
+	"math/rand"
 )
 
 type FixTransfer struct {
@@ -36,8 +37,11 @@ func (v *FixTransfer) FixTransfer() {
 			continue
 		}
 
+		rnumber := rand.Intn(4) + 1
+		cstr := strconv.Itoa(rnumber)
+		logger.Debug("Random corner " + cstr)
 		params[ridx] = make(map[string]string)
-		params[ridx]["corner"] = "1"
+		params[ridx]["corner"] = cstr
 
 		stringRarr := make([]string, len(rarr))
 		for idx, ssn := range rarr {

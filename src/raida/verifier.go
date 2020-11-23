@@ -5,7 +5,7 @@ import (
 	"config"
 	"strconv"
 	"encoding/json"
-	"sort"
+//	"sort"
 	"regexp"
 	"cloudcoin"
 	"error"
@@ -103,8 +103,9 @@ func (v *Verifier) Receive(uuid string, owner string) (string, *error.Error) {
 
 	pairs := sortByCount(balances)
 	topBalance := pairs[0].Key
+	voted := pairs[0].Value
 
-	logger.Debug("Most voted balance: " + strconv.Itoa(topBalance))
+	logger.Debug("Most voted balance: " + strconv.Itoa(topBalance) + ", voted: " + strconv.Itoa(voted))
   for idx, result := range results {
     if result.ErrCode != config.REMOTE_RESULT_ERROR_NONE {
 			continue
@@ -125,27 +126,62 @@ func (v *Verifier) Receive(uuid string, owner string) (string, *error.Error) {
 	pownString := v.GetPownStringFromStatusArray(pownArray)
 	logger.Debug("Pownstring " + pownString)
 
-	if !v.IsStatusArrayFixable(pownArray) {
-		return "", &error.Error{config.ERROR_RESULTS_FROM_RAIDA_OUT_OF_SYNC, "Results from the RAIDA are not synchronized"}
-	}
 
-	vo := &VerifierOutput{}
-	vo.AmountVerified = topBalance
-	vo.Status = "success"
-	vo.Message = "CloudCoins verified"
-
+	logger.Debug("Running FixTransfer " + pownString)
 	// Getting Sns for fixing
 	ft := NewFixTransfer()
+	
 	for ssn, _ := range allSns {
+		
+		absent := 0
+		for _, farr := range fArr {
+			if _, ok := farr[ssn]; !ok {
+				absent++
+			}
+		}
+
+		if (absent > config.TOTAL_RAIDA_NUMBER / 2) {
+				logger.Debug("Coin " + strconv.Itoa(ssn) + " is absent on a lot of servers")
+				for ridx, farr := range fArr {
+					if _, ok := farr[ssn]; ok {
+						logger.Debug("Coin " + strconv.Itoa(ssn) + " will be fixed (removal) on raida " + strconv.Itoa(ridx))
+						ft.AddSNToRepairArray(ridx, ssn)
+					}
+				}
+				continue
+		}
+
 		for ridx, farr := range fArr {
 			if _, ok := farr[ssn]; !ok {
 				logger.Debug("Coin " + strconv.Itoa(ssn) + " will be fixed on raida " + strconv.Itoa(ridx))
 				ft.AddSNToRepairArray(ridx, ssn)
 			}
 		}
+		
+		/*
+		for ridx, _ := range fArr {
+				ft.AddSNToRepairArray(ridx, ssn)
+		}
+		*/
+		
+		
 	}
 
 	ft.FixTransfer()
+
+	if !v.IsStatusArrayFixable(pownArray) {
+		return "", &error.Error{config.ERROR_RESULTS_FROM_RAIDA_OUT_OF_SYNC, "Results from the RAIDA are not synchronized"}
+	}
+
+  if voted < config.NEED_VOTERS_FOR_BALANCE {
+		return "", &error.Error{config.ERROR_RESULTS_FROM_RAIDA_OUT_OF_SYNC, "Results from the RAIDA are not synchronized. Not enough good results"}
+ 	}
+
+	vo := &VerifierOutput{}
+	vo.AmountVerified = topBalance
+	vo.Status = "success"
+	vo.Message = "CloudCoins verified"
+
 
 	b, err := json.Marshal(vo); 
 	if err != nil {
@@ -156,7 +192,7 @@ func (v *Verifier) Receive(uuid string, owner string) (string, *error.Error) {
 	return string(b), nil
 }
 
-
+/*
 func sortByCount(totals map[int]int) PairList {
 	pl := make(PairList, len(totals))
 	i := 0
@@ -179,3 +215,4 @@ type PairList []Pair
 func (p PairList) Len() int { return len(p) }
 func (p PairList) Less(i, j int) bool { return p[i].Value < p[j].Value }
 func (p PairList) Swap(i, j int)  { p[i], p[j] = p[j], p[i] }
+*/

@@ -75,3 +75,29 @@ func (da *DetectionAgent) SendRequest(url string, params map[string]string, done
 	result.Index = da.index
 	done <-*result
 }
+
+func (da *DetectionAgent) SendRequestRaw(url string, params map[string]string, done chan Result, doneIssued chan bool, post bool) {
+	result := &Result{}
+
+	if response, err := da.c.Send(url, params, doneIssued, post); err != nil {
+		da.logError("Failed to send request: " + err.Message)
+		result.Message = err.Message
+		if (err.Code == httpclient.ERR_TIMEOUT) {
+			result.ErrCode = config.REMOTE_RESULT_ERROR_TIMEOUT
+		} else {
+			result.ErrCode = config.REMOTE_RESULT_ERROR_COMMON
+		}
+	} else {
+		if doneIssued != nil {
+			da.log("Response ignored")
+		} else {
+			da.log("Response received")
+			da.log(response)
+		}
+		result.Message = response
+		result.ErrCode = config.REMOTE_RESULT_ERROR_NONE
+	}
+
+	result.Index = da.index
+	done <-*result
+}
