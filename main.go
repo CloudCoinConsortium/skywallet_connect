@@ -13,7 +13,7 @@ import (
 	"error"
 )
 
-const VERSION = "0.0.9"
+const VERSION = "0.0.10"
 
 func Usage() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
@@ -122,7 +122,7 @@ func main() {
 		}
 		amount, to, memo := flag.Arg(1), flag.Arg(2), flag.Arg(3)
 		if (amount == "" || to == "" || memo == "") {
-			core.ShowError(config.ERROR_INCORRECT_USAGE, "Amount, To, Memoparameters required: " + os.Args[0] + " transfer 250 destination.skywallet.cc memo")
+			core.ShowError(config.ERROR_INCORRECT_USAGE, "Amount, To, Memo parameters required: " + os.Args[0] + " transfer 250 destination.skywallet.cc memo")
 		}
 
 		var cc *cloudcoin.CloudCoin

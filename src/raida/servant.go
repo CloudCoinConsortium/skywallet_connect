@@ -10,6 +10,8 @@ import(
 	"error"
 	"core"
 	"sort"
+	"time"
+	"encoding/base64"
 )
 
 type Servant struct {
@@ -430,6 +432,76 @@ func (s *Servant) SetCoinStatusInArray(ccs []cloudcoin.CloudCoin, aIdx int, raid
 
 func (s *Servant) SetCoinStatus(cc cloudcoin.CloudCoin, idx int, status int) {
 	cc.SetDetectStatus(idx, status)
+}
+
+func (s *Servant) SplitMessage(message string) [][]string {
+	var data [][]string
+
+
+	data = make([][]string, s.Raida.TotalServers())
+	pads := len(message) % s.Raida.TotalServers()
+	for i := 0; i < (s.Raida.TotalServers() - pads); i++ {
+		message += "-"
+	}
+
+	for i := 0; i < s.Raida.TotalServers(); i++ {
+		data[i] = make([]string, 3)
+		data[i][0] = ""
+		data[i][1] = ""
+		data[i][2] = ""
+	}
+
+	cs := strings.Split(message, "")
+	for i := 0; i < len(cs); i++ {
+		ridx := i % s.Raida.TotalServers();
+		data[ridx][0] += cs[i];
+	}
+
+	for i := 0; i < s.Raida.TotalServers(); i++ {
+		cidx0 := i + 3
+		cidx1 := i + 6
+
+		if cidx0 >= s.Raida.TotalServers() {
+			cidx0 -= s.Raida.TotalServers()
+		}
+
+		if cidx1 >= s.Raida.TotalServers() {
+			cidx1 -= s.Raida.TotalServers()
+		}
+
+		data[i][1] += data[cidx0][0]
+		data[i][2] += data[cidx1][0]
+	}
+
+	return data
+}
+
+func (s *Servant) GetObjectMemo(guid string, memo string, amount string, from string) []string {
+	var tags []string
+
+	tags = make([]string, s.Raida.TotalServers())
+	if (guid == "") {
+		guid, _ = cloudcoin.GeneratePan()
+		logger.Debug("Generated GUID " + guid)
+	}
+
+	currentTime := time.Now()
+	sb := ""
+	sb += "[general]\n"
+	sb += "date=" + currentTime.Format("2006-01-02 15:04:05") + "\n"
+	sb += "guid=" + guid + "\n"
+	sb += "from=" + from + "\n"
+	sb += "amount=" + amount + "\n"
+	sb += "dsecription=From RaidaGo\n"
+
+	str := base64.StdEncoding.EncodeToString([]byte(sb))
+	d := s.SplitMessage(str)
+	ms := config.META_ENV_SEPARATOR
+	for i := 0; i < s.Raida.TotalServers(); i++ {
+		tags[i] = memo + ms + guid + ms + d[i][0] + ms + d[i][1] + ms + d[i][2]
+	}
+
+	return tags
 }
 
 func sortByCount(totals map[int]int) PairList {

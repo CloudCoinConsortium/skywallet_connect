@@ -55,7 +55,7 @@ func (v *Sender) Send(amount string, to string, memo string) (string, *error.Err
 	}
 
 	logger.Debug("Started Sender " + amount + " to " + to + " (" + strconv.Itoa(to_sn) + ") memo " + memo)
-
+	tags := v.GetObjectMemo("", memo, amount, "RaidaGo")
 
 	var ccs []cloudcoin.CloudCoin
 	var extraCC *cloudcoin.CloudCoin
@@ -132,7 +132,7 @@ func (v *Sender) Send(amount string, to string, memo string) (string, *error.Err
 	for _, sn := range ccs {
 		bufCCs = append(bufCCs, sn)
 		if (len(bufCCs) == config.MAX_NOTES_TO_SEND) {
-			if err := v.processSend(bufCCs, to_sn, memo); err != nil {
+			if err := v.processSend(bufCCs, to_sn, tags); err != nil {
 				return "", err
 			}
 			bufCCs = nil
@@ -140,7 +140,7 @@ func (v *Sender) Send(amount string, to string, memo string) (string, *error.Err
 	}
 
 	if (len(bufCCs) != 0) {
-		if err := v.processSend(bufCCs, to_sn, memo); err != nil {
+		if err := v.processSend(bufCCs, to_sn, tags); err != nil {
 			return "", err
 		}
 	}
@@ -162,7 +162,7 @@ func (v *Sender) Send(amount string, to string, memo string) (string, *error.Err
   return string(b), nil
 }
 
-func (v *Sender) processSend(ccs []cloudcoin.CloudCoin, to int, memo string) *error.Error {
+func (v *Sender) processSend(ccs []cloudcoin.CloudCoin, to int, tags []string) *error.Error {
 	logger.Debug("Processing " + strconv.Itoa(len(ccs)) + " notes")
 
   stringSns := make([]string, len(ccs))
@@ -192,7 +192,7 @@ func (v *Sender) processSend(ccs []cloudcoin.CloudCoin, to int, memo string) *er
 		params[idx] = make(map[string]string)
 		params[idx]["b"] = "t"
 		params[idx]["to_sn"] = strconv.Itoa(to)
-	  params[idx]["tag"] = memo
+	  params[idx]["tag"] = tags[idx]
 	  params[idx]["nns[]"] = string(baNn)
 		params[idx]["sns[]"] = string(baSn)
 		params[idx]["denomination[]"] = string(baDn)

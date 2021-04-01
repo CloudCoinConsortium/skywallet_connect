@@ -11,6 +11,8 @@ import (
 	"error"
 	"strings"
 	"fmt"
+	"path/filepath"
+	"regexp"
 )
 
 type CloudCoin struct {
@@ -93,6 +95,20 @@ func (cc *CloudCoin) GetDenomination() int {
 	}
 
 	return GetDenomination(snInt)
+}
+
+func (cc *CloudCoin) GetFileName() string {
+	if (cc.Path == "") {
+		return "OwnerWallet"
+	}
+
+	base := filepath.Base(cc.Path)
+	if (cc.Type == config.TYPE_PNG) {
+		re := regexp.MustCompile(`(.+)\.png$`)
+		base = re.ReplaceAllString(base, "$1")
+	}
+
+	return base
 }
 
 func (cc *CloudCoin) GetName() string {

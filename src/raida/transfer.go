@@ -42,6 +42,7 @@ func (v *Transfer) Transfer(cc *cloudcoin.CloudCoin, amount string, to string, m
 		return "", &error.Error{config.ERROR_INCORRECT_AMOUNT_SPECIFIED, "Invalid amount"}
 	}
 
+
 	if amountInt <= 0 {
 		return "", &error.Error{config.ERROR_INCORRECT_AMOUNT_SPECIFIED, "Invalid amount"}
 	}
@@ -52,6 +53,7 @@ func (v *Transfer) Transfer(cc *cloudcoin.CloudCoin, amount string, to string, m
 	}
 
 	logger.Debug("Started Transfer " + amount + " to " + to + " (" + strconv.Itoa(to_sn) + ") memo " + memo)
+	tags := v.GetObjectMemo("", memo, amount, cc.GetFileName())
 
 	s := NewShow()
 	sns, total, err3 := s.ShowBrief(cc)
@@ -113,7 +115,7 @@ func (v *Transfer) Transfer(cc *cloudcoin.CloudCoin, amount string, to string, m
 	for _, sn := range nsns {
 		bufSns = append(bufSns, sn)
 		if (len(bufSns) == config.MAX_NOTES_TO_SEND) {
-			if err := v.processTransfer(bufSns, cc, to_sn, memo); err != nil {
+			if err := v.processTransfer(bufSns, cc, to_sn, tags); err != nil {
 				return "", err
 			}
 			bufSns = nil
@@ -121,7 +123,7 @@ func (v *Transfer) Transfer(cc *cloudcoin.CloudCoin, amount string, to string, m
 	}
 
 	if (len(bufSns) != 0) {
-		if err := v.processTransfer(bufSns, cc, to_sn, memo); err != nil {
+		if err := v.processTransfer(bufSns, cc, to_sn, tags); err != nil {
 			return "", err
 		}
 	}
@@ -143,7 +145,7 @@ func (v *Transfer) Transfer(cc *cloudcoin.CloudCoin, amount string, to string, m
   return string(b), nil
 }
 
-func (v *Transfer) processTransfer(sns []int, cc *cloudcoin.CloudCoin, to int, memo string) *error.Error {
+func (v *Transfer) processTransfer(sns []int, cc *cloudcoin.CloudCoin, to int, tags []string) *error.Error {
 	logger.Debug("Processing " + strconv.Itoa(len(sns)) + " notes")
 
   stringSns := make([]string, len(sns))
@@ -163,7 +165,7 @@ func (v *Transfer) processTransfer(sns []int, cc *cloudcoin.CloudCoin, to int, m
     params[idx]["pan"] = cc.Ans[idx]
     params[idx]["denomination"] = strconv.Itoa(cc.GetDenomination())
     params[idx]["to_sn"] = strconv.Itoa(to)
-    params[idx]["tag"] = memo
+    params[idx]["tag"] = tags[idx]
     params[idx]["sns[]"] = string(ba)
   }
 
@@ -173,7 +175,7 @@ func (v *Transfer) processTransfer(sns []int, cc *cloudcoin.CloudCoin, to int, m
       r := result.Data.(*TransferResponse)
       if (r.Status == "allpass") {
         pownArray[idx] = config.RAIDA_STATUS_PASS
-      } else if (r.Status == "allfail") {
+      } else if (r.Status == "allfail" || r.Status == "fail") {
         pownArray[idx] = config.RAIDA_STATUS_FAIL
       } else if (r.Status == "mixed") {
 				// We need to tell that if there is one error the whole operation is treated as errornous
