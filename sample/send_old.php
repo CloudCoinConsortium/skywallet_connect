@@ -1,4 +1,9 @@
 <?php
+/*
+This is old code for reference only.
+Do not use this as we have replaced view_receipt with verify_payment
+*/
+
         $mywallet = $_GET['merchant_skywallet'];
 	$customer_skywallet=$_GET['customer_skywallet'];
 	$amount_due = $_GET['amount'];
