@@ -1,26 +1,32 @@
 <?php
+/*
+Allows you to command your Skywallet send coins to another Skywallet account. 
 
+Open Source
+Free to use with all errors, flaws, bugs etc. 
+Last Changed: April 10, 2021
+*/
 
 ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
 
-$raida_go = "/usr/bin/raida_go";
-if (!file_exists($raida_go))
-        die("Raida Go not found");
+$skywallet_connect = "/usr/bin/skywallet_connect";
+if (!file_exists($skywallet_connect))
+        die("skywallet_connect not found");
 
-if (!is_executable($raida_go))
-        die("Raida Go doesn't have exec permissions");
+if (!is_executable($skywallet_connect))
+        die("skywallet_connect doesn't have exec permissions");
 
 
 	function getbalance($meta ,$merchant , $amount ) {
 		 
 		
-		global $raida_go;
+		global $skywallet_connect;
 		
 		$memo = base64_encode($meta); 
 		
-		$cmd =  "$raida_go transfer $amount $merchant $memo";
+		$cmd =  "$skywallet_connect transfer $amount $merchant $memo";
 		
 		// Exec the binary
 		$json = exec($cmd, $outarray, $error_code);
@@ -33,8 +39,8 @@ if (!is_executable($raida_go))
 		}
 		if ($error_code != 0) {
 			$res['status'] = 0;			
-			$res['message'] = 'Amount, To, Memoparameters required: /usr/bin/raida_go transfer 250 destination.skywallet.cc memo';			
-			//echo "Invalid response from raida_go: $error_code, Output $json";
+			$res['message'] = 'Amount, To, Memoparameters required: /usr/bin/skywallet_connect transfer 250 destination.skywallet.cc memo';			
+			//echo "Invalid response from skywallet_connect: $error_code, Output $json";
 			//return 1;
 			return $res;
 		}	
@@ -51,7 +57,7 @@ if (!is_executable($raida_go))
 	isset($event_json[0]->key) ? $key = $event_json[0]->key : $key= '';	
 		
 	if(!empty($key)){
-		if(md5($key) == 'a950c0245a354b63b422058c063349bb'){		
+		if(md5($key) == 'The 32 digit hexidecimal hash of your key/password goes here'){		
 			isset($event_json[0]->meta) ? $meta = $event_json[0]->meta : $meta= '';	
 			isset($event_json[0]->merchant) ? $merchant = $event_json[0]->merchant : $merchant= '';	
 			isset($event_json[0]->amount) ? $amount = $event_json[0]->amount : $amount= 0;
