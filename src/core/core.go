@@ -86,6 +86,7 @@ func CreateFolders() {
 	MkDir(rootDir + Ps() + config.DIR_FRACKED)
 	MkDir(rootDir + Ps() + config.DIR_SENT)
 	MkDir(rootDir + Ps() + config.DIR_COUNTERFEIT)
+	MkDir(rootDir + Ps() + config.DIR_ID)
 }
 
 func MoveCoinToCounterfeit(cc cloudcoin.CloudCoin) {

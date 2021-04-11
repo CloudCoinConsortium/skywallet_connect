@@ -1,4 +1,4 @@
-PROJECT_NAME=raida_go
+PROJECT_NAME=skywallet_connect
 
 GOBASE=$(shell pwd)
 GOPATH=$(GOBASE)/vendor:$(GOBASE):/home/alexander/go

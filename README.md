@@ -2,16 +2,16 @@
 
 ![Skywallet](http://raidatech.com/img/skywallet.png)
 
-Note: Before you can run the raida_go program on Linux, you must first make it an executable by running: 
+Note: Before you can run the skywallet_connect program on Linux, you must first make it an executable by running: 
 ```bash
-chmod +x raida_go
+chmod +x skywallet_connect
 ```
 Also Note: This program will write a log file to a folder that you specify. You must give the program permissions to write to that folder. We recommend that you create a folder called "cloudcoinlogs" and give your web server write permissions to that folder. 
 ```bash
 chmod 100 /path/to/cloudcoinlogs
 ```
 
-RAIDA GO Console program allows you to verify that you have received funds in your Skwyallet and to send fund to another Skywallet account from your Skywallet. You can find both the Linux and Windows version at: https://CloudCoinConsortium.com/zip/raida_go.zip
+RAIDA GO Console program allows you to verify that you have received funds in your Skwyallet and to send fund to another Skywallet account from your Skywallet. You can find both the Linux and Windows version at: https://CloudCoinConsortium.com/zip/skywallet_connect.zip
 
 [-version](README.md#-version)
 
@@ -38,7 +38,7 @@ RAIDA GO Console program allows you to verify that you have received funds in yo
 ## -version
 example usage:
 ```
-C:\cloudcoin\raida_go.exe -version
+C:\cloudcoin\skywallet_connect.exe -version
 ```
 Sample response:
 ```
@@ -49,14 +49,14 @@ Sample response:
 
 example usage:
 ```
-C:\cloudcoin\raida_go.exe -help
+C:\cloudcoin\skywallet_connect.exe -help
 ```
 Sample response:
 ```console
-Usage of raida_go:
-raida_go [-debug] [-log logfile] <operation> <args>
-raida_go [-help]
-raida_go [-version]
+Usage of skywallet_connect:
+skywallet_connect [-debug] [-log logfile] <operation> <args>
+skywallet_connect [-help]
+skywallet_connect [-version]
 
 <operation> is one of 'view_receipt|transfer|send|show|balance'
 <args> arguments for operation
@@ -74,22 +74,22 @@ raida_go [-version]
 You can add -help parameter to any specific operation 
 
 ```console
-./raida_go -help
-./raida_go -help view_receipt
-./raida_go -help transfer
-./raida_go -help send
-./raida_go -help show
-./raida_go -help balance
+./skywallet_connect -help
+./skywallet_connect -help view_receipt
+./skywallet_connect -help transfer
+./skywallet_connect -help send
+./skywallet_connect -help show
+./skywallet_connect -help balance
 ```
 
 ## Config
-You can configure the behaviour of the RaidaGo by using a configuration file. The file must be placed in your raida_go folder. This folder is located in the user's directory.
+You can configure the behaviour of the RaidaGo by using a configuration file. The file must be placed in your skywallet_connect folder. This folder is located in the user's directory.
 
 For Linux:
-/home/user/raida_go/config.toml
+/home/user/skywallet_connect/config.toml
 
 For Windows:
-c:\Users\User\raida_go\config.toml
+c:\Users\User\skywallet_connect\config.toml
 
 The file is in TOML format (https://en.wikipedia.org/wiki/TOML):
 Only three directives are supported at the moment
@@ -114,18 +114,18 @@ View receipt allows you to see the money that someone sent to your Skywallet. Yo
 your account name and the GUID the customer has sent you in their memo. Note, the Skywallet point of service (POSJS) software will generate a guid for the customer and they will never see it.  
 
 ```console
-$ ./raida_go view_receipt 080A4CE89126F4F1B93E4745F89F6713 merchant.mydomain.com
+$ ./skywallet_connect view_receipt 080A4CE89126F4F1B93E4745F89F6713 merchant.mydomain.com
 {"amount_verified":100,"status":"success","message":"CloudCoins verified"}
 ```
 Same Example in Windows:
 ```console
-C:\xampp\htdocs\cloudcoin\raida_go.exe view_receipt 080A4CE89126F4F1B93E4745F89F6713 merchant.mydomain.com
+C:\xampp\htdocs\cloudcoin\skywallet_connect.exe view_receipt 080A4CE89126F4F1B93E4745F89F6713 merchant.mydomain.com
 {"amount_verified":100,"status":"success","message":"CloudCoins verified"}
 ```
 To see additional Debug Info:
 
 ```console
-$ ./raida_go -debug view_receipt 080A4CE89126F4F1B93E4745F89F6713 merchant.mydomain.com
+$ ./skywallet_connect -debug view_receipt 080A4CE89126F4F1B93E4745F89F6713 merchant.mydomain.com
 ```
 
 Error Codes:
@@ -163,12 +163,12 @@ Note: These error codes are the same for all commands
 
 ## Transfer:
 
-format: ./raida_go transfer <amount of coins to transfer> <destination_skywallet> <memo> <path to ID coin>
+format: ./skywallet_connect transfer <amount of coins to transfer> <destination_skywallet> <memo> <path to ID coin>
  
 Example:
 
 ```console
-$ ./raida_go transfer 2 myfriend.skywallet.cc "my memo" /home/user/my.skywallet.cc.stack
+$ ./skywallet_connect transfer 2 myfriend.skywallet.cc "my memo" /home/user/my.skywallet.cc.stack
 {"amount_sent":2,"Message":"CloudCoins sent","Status":"success"}
 ```
 
@@ -177,12 +177,12 @@ $ ./raida_go transfer 2 myfriend.skywallet.cc "my memo" /home/user/my.skywallet.
 
 Sends coins from a local wallet to a Sky Wallet. The coins must be put in the /home/user/CloudCoinStorage/Bank folder in Linux or C:\Users\Username\CloudCoinStorage\Bank in Windows
 
-format: ./raida_go send <amount of coins to send> <destination_skywallet> <memo>
+format: ./skywallet_connect send <amount of coins to send> <destination_skywallet> <memo>
 
 Example:
 
 ```console
-$ ./raida_go send 1 axx.skywallet.cc mymemo
+$ ./skywallet_connect send 1 axx.skywallet.cc mymemo
 {"amount_sent":1,"Message":"CloudCoins sent","Status":"success"}
 ```
 
@@ -190,17 +190,17 @@ $ ./raida_go send 1 axx.skywallet.cc mymemo
 
 Shows the inventory
 
-format ./raida_go show
+format ./skywallet_connect show
 
 ```console
-$ ./raida_go show
+$ ./skywallet_connect show
 {"d1":1,"d5":4,"d25":3,"d100":1,"d250":0,"total":196}
 ```
 
 The list of possible errors:
 
 <pre>
-{"status":"error", "message":"Failed to find ID coin, please create a folder called ID in the same folder as your raida_go program. Place one ID coins in that folder"}
+{"status":"error", "message":"Failed to find ID coin, please create a folder called ID in the same folder as your skywallet_connect program. Place one ID coins in that folder"}
 {"status":"error", "message":"Failed to parse ID Coin"}
 {"status":"error", "message":"Failed to generate random string"} // The program failed to generate random hex-string
 {"status":"error", "message":"Failed to convert IP octet1"} // The program failed to convert IP address (four octets xxx.xxx.xxx.xxx) to a serial number
@@ -225,19 +225,19 @@ The list of possible errors:
 Example Error if the amount to transfer, the skwyallet of the person to transfer it to or the memo is left out:
 
 ```console
-{"status":"fail", "message":"Amount, To and Memo parameters required: raida_go transfer 250 destination.skywallet.cc memo "}
+{"status":"fail", "message":"Amount, To and Memo parameters required: skywallet_connect transfer 250 destination.skywallet.cc memo "}
 ```
 
 ## Deposit
 Deposit allows you to take CloudCoins that are located on your hard drive and upload them to your Skywallet. 
 
-The Deposit command has not been implemented in raida_go but we could easily do this if needed. If you need the Deposit function email CloudCoin@Protonmail.com.
+The Deposit command has not been implemented in skywallet_connect but we could easily do this if needed. If you need the Deposit function email CloudCoin@Protonmail.com.
 
 ## Withdraw
 
 Receive allows you to take CloudCoins out of your Skywallet and download them to your hard drive. 
 
-The Withdraw command has not been implemented in raida_go but we could easily do this if needed. If you need the Withdraw function email CloudCoin@Protonmail.com.
+The Withdraw command has not been implemented in skywallet_connect but we could easily do this if needed. If you need the Withdraw function email CloudCoin@Protonmail.com.
 
 ## Balance
 Balance allows you to see the total amount of CloudCoins in your Skywallet. It can also be used to see the balance in another skywallet if they give you the AN of one of their ID Coins.
@@ -245,24 +245,24 @@ Balance allows you to see the total amount of CloudCoins in your Skywallet. It c
 Sample call of the ID coin in your ID folder:
 ```bash
 Linux: 
-$ ./raida_go balance
+$ ./skywallet_connect balance
 
 Windows: 
-raida_go.exe balance
+skywallet_connect.exe balance
 ```
 Sample call of another person's account using their "view balance" key:
 ```bash
 Linux: 
-./raida_go balance sean.CloudCoin.global 1.15.ddf82992e895449da47d2ddf52d7dc5f 1.24.9843782885464e48aed29542710ef98c
+./skywallet_connect balance sean.CloudCoin.global 1.15.ddf82992e895449da47d2ddf52d7dc5f 1.24.9843782885464e48aed29542710ef98c
 ```
 where "sean.cloudcoin.global" is the user's account, The '1' is the network number, the '15 and '24' are the RAIDA Numbers and the GUIDs are ANs also know as the Access Key  and backup Access Key. These keys can be given to others to check the balance.
 
 ```console
-$ ./raida_go balance
+$ ./skywallet_connect balance
 {"total":2798}
 ```
 Same Example in Windows:
 ```console
-# C:\xampp\htdocs\cloudcoin\raida_go.exe balance
+# C:\xampp\htdocs\cloudcoin\skywallet_connect.exe balance
 {"total":2798}
 ```

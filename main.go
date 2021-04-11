@@ -13,14 +13,14 @@ import (
 	"error"
 )
 
-const VERSION = "0.0.10"
+const VERSION = "0.0.11"
 
 func Usage() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "%s [-debug] <operation> <args>\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "%s [-help]\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "%s [-version]\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\n<operation> is one of 'view_receipt|transfer|send|inventory|balance'\n")
+		fmt.Fprintf(os.Stderr, "\n<operation> is one of 'view_receipt|verify_payment|transfer|send|inventory|balance'\n")
 		fmt.Fprintf(os.Stderr, "<args> arguments for operation\n\n")
 		flag.PrintDefaults()
 }
@@ -78,6 +78,44 @@ func main() {
 		}
 		r := raida.NewVerifier()
 		response, err := r.Receive(uuid, owner)
+		if err != nil {
+			core.ShowError(err.Code, err.Message)
+		}
+
+		fmt.Println(response)
+	} else if operation == "verify_payment" {
+		if (config.CmdHelp) {
+			fmt.Fprintf(os.Stderr, "verify_payment allows the sender and receiver of a payment to verify the reciept\n\n")
+			fmt.Fprintf(os.Stderr, "Usage:\n")
+			fmt.Fprintf(os.Stderr, "%s [-debug] verify_payment <uuid> [<idcoin]\n\n", os.Args[0])
+			fmt.Fprintf(os.Stderr, "<uuid> - uuid of the receipt\n")
+			fmt.Fprintf(os.Stderr, "<idcoin> - ID coin path\n\n")
+			fmt.Fprintf(os.Stderr, "Example:\n")
+			fmt.Fprintf(os.Stderr, "%s verify_payment 080A4CE89126F4F1B93E4745F89F6713\n", os.Args[0])
+			os.Exit(0)
+		}
+
+		memo := flag.Arg(1)
+		if (memo == "") {
+			core.ShowError(config.ERROR_INCORRECT_USAGE, "Memo parameter required: " + os.Args[0])
+		}
+
+		var cc *cloudcoin.CloudCoin
+		var err *error.Error
+		if (flag.NArg() == 2) {
+			cc, err = core.GetIDCoin()
+		} else if (flag.NArg() == 3) {
+			idcoin := flag.Arg(2)
+			cc, err = core.GetIDCoinFromPath(idcoin)
+		} else {
+			core.ShowError(config.ERROR_INCORRECT_USAGE, "Memo parameter required: " + os.Args[0])
+		}
+		if err != nil {
+			core.ShowError(err.Code, err.Message)
+		}
+
+		r := raida.NewPaymentVerifier()
+		response, err := r.Verify(memo, cc)
 		if err != nil {
 			core.ShowError(err.Code, err.Message)
 		}

@@ -480,6 +480,17 @@ func (s *Servant) GetObjectMemo(guid string, memo string, amount string, from st
 	var tags []string
 
 	tags = make([]string, s.Raida.TotalServers())
+	d := s.GetStripesMirrorsForObjectMemo(guid, memo, amount, from)
+
+	ms := config.META_ENV_SEPARATOR
+	for i := 0; i < s.Raida.TotalServers(); i++ {
+		tags[i] = memo + ms + guid + ms + d[i][0] + ms + d[i][1] + ms + d[i][2]
+	}
+
+	return tags
+}
+
+func (s *Servant) GetStripesMirrorsForObjectMemo(guid string, memo string, amount string, from string) [][]string {
 	if (guid == "") {
 		guid, _ = cloudcoin.GeneratePan()
 		logger.Debug("Generated GUID " + guid)
@@ -496,12 +507,31 @@ func (s *Servant) GetObjectMemo(guid string, memo string, amount string, from st
 
 	str := base64.StdEncoding.EncodeToString([]byte(sb))
 	d := s.SplitMessage(str)
-	ms := config.META_ENV_SEPARATOR
-	for i := 0; i < s.Raida.TotalServers(); i++ {
-		tags[i] = memo + ms + guid + ms + d[i][0] + ms + d[i][1] + ms + d[i][2]
+
+	return d
+}
+
+func (s *Servant) GetGuidFromMemo(memo string) (string, *error.Error) {
+	cs := strings.Split(memo, config.META_ENV_SEPARATOR)
+	if len(cs) != 5 {
+		return "", &error.Error{config.ERROR_INVALID_GUID, "Invalid GUID#1"}
 	}
 
-	return tags
+	guid := cs[1]
+	if !cloudcoin.ValidateGuid(guid) {
+		return "", &error.Error{config.ERROR_INVALID_GUID, "Invalid GUID#2"}
+	}
+
+	return guid, nil
+}
+
+func (s *Servant) GetMemoFromMemo(memo string) (string, *error.Error) {
+	cs := strings.Split(memo, config.META_ENV_SEPARATOR)
+	if len(cs) != 5 {
+		return "", &error.Error{config.ERROR_INVALID_GUID, "Invalid Memo#1"}
+	}
+
+	return cs[0], nil
 }
 
 func sortByCount(totals map[int]int) PairList {
@@ -516,6 +546,32 @@ func sortByCount(totals map[int]int) PairList {
   sort.Sort(sort.Reverse(pl))
   return pl
 }
+
+func sortByCountString(totals map[string]int) PairStringList {
+  pl := make(PairStringList, len(totals))
+  i := 0
+
+  for k, v := range totals {
+    pl[i] = PairString{k, v}
+    i++
+  }
+
+  sort.Sort(sort.Reverse(pl))
+  return pl
+}
+
+type PairString struct {
+  Key string
+  Value int
+}
+
+type PairStringList []PairString
+func (p PairStringList) Len() int { return len(p) }
+func (p PairStringList) Less(i, j int) bool { return p[i].Value < p[j].Value }
+func (p PairStringList) Swap(i, j int)  { p[i], p[j] = p[j], p[i] }
+
+
+
 
 type Pair struct {
   Key int

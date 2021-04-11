@@ -60,6 +60,12 @@ func ResolveSkyWallet(skywallet string) (int, *error.Error) {
 	return sn, nil
 }
 
+func ValidateGuid(guid string) bool {
+	rex, _ := regexp.Compile(`^[0-9a-fA-F]{32}$`)
+
+	return rex.MatchString(guid)
+}
+
 func GetSNFromIP(ipaddress string) (int, *error.Error) {
 	ipRegex, _ := regexp.Compile(`^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$`)
 	s := ipRegex.FindStringSubmatch(strings.Trim(ipaddress, " "))

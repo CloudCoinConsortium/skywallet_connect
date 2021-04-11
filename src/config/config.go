@@ -44,7 +44,7 @@ const (
 )
 
 
-const TOPDIR = "raida_go"
+const TOPDIR = "skywallet_connect_home"
 const DIR_BANK = "Bank"
 const DIR_FRACKED = "Fracked"
 const DIR_SENT = "Sent"
@@ -101,3 +101,4 @@ const ERROR_MORE_THAN_ONE_CC = 27
 const ERROR_BREAK_FAILED = 28
 const ERROR_WRITE_FILE = 29
 const ERROR_CONFIG_PARSE = 30
+const ERROR_INVALID_GUID = 31
