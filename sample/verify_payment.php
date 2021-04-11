@@ -4,18 +4,18 @@ ini_set('display_startup_errors', '1');
 error_reporting(E_ALL); 
 
 
-$raida_go = "/usr/bin/raida_go";
-if (!file_exists($raida_go))
-        die("Raida Go not found");
+$skywallet_connect = "/usr/bin/skywallet_connect";
+if (!file_exists($skywallet_connect))
+        die("skywallet_connect not found");
 
-if (!is_executable($raida_go))
-        die("Raida Go doesn't have exec permissions");
+if (!is_executable($skywallet_connect))
+        die("skywallet_connect doesn't have exec permissions");
 
 $data['status'] = 0;
 function verify_payment($guid, $amount, $skywallet,$meta) {
-        global $raida_go;
+        global $skywallet_connect;
 
-        $cmd =  "$raida_go view_receipt $guid $skywallet";
+        $cmd =  "$skywallet_connect view_receipt $guid $skywallet";
 
         // Exec the binary
         $json = exec($cmd, $outarray, $error_code);
@@ -84,7 +84,7 @@ fwrite($file, $out1);
 fclose($file);   
 
 if($result['status'] == 1){	
-	$result['key'] = '3c8dea116b964d529faf34b21bbaf595';
+	$result['key'] = 'Your GUID here';
 	
 	$url = 'https://yourcompany.com/lht/receivecc';
 	$ch = curl_init();
