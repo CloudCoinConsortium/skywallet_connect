@@ -4,23 +4,23 @@
 
 RAIDA GO Console program allows you to verify that you have received funds in your Skwyallet and to send funds to another Skywallet account from your Skywallet.
 
-## Installing raida_go
+## Installing skywallet_connect
 
-The Linux version can be found at https://CloudCoinConsotium.com/zip/raida_go.zip
+The Linux version can be found at https://CloudCoinConsotium.com/zip/skywallet_connect.zip
 
-The Linux version can be found at https://CloudCoinConsotium.com/zip/windows_raida_go.zip
+The Linux version can be found at https://CloudCoinConsotium.com/zip/windows_skywallet_connect.zip
 
-Once you unzip the folder, we suggest you unzip it in your /usr/local folder. Your folder structure will end up looking like the tree below. The raida_go folder will contain 
-the config.toml file, the raida_go executable, and the cloudcoinlogs and ID folders. 
+Once you unzip the folder, we suggest you unzip it in your /usr/local folder. Your folder structure will end up looking like the tree below. The skywallet_connect folder will contain 
+the config.toml file, the skywallet_connect executable, and the cloudcoinlogs and ID folders. 
 ```
 /usr/local/cloudcoin
                   │   config.toml
-                  │   raida_go
+                  │   skywallet_connect
                   ├───logs
                   └───debit_cards
 
 ```
-Note: Before you can run the raida_go program on Linux, you must first make it an executable by running: 
+Note: Before you can run the skywallet_connect program on Linux, you must first make it an executable by running: 
 ```bash
 chmod +x skywallet_connect
 ```
