@@ -10,14 +10,16 @@ The Linux version can be found at https://CloudCoinConsotium.com/zip/skywallet_c
 
 The Linux version can be found at https://CloudCoinConsotium.com/zip/windows_skywallet_connect.zip
 
-Once you unzip the folder, we suggest you unzip it in your /usr/local folder. Your folder structure will end up looking like the tree below. The skywallet_connect folder will contain 
-the config.toml file, the skywallet_connect executable, and the cloudcoinlogs and ID folders. 
+When first launched the skywallet_connect will create the following folder structure
 ```
-/usr/local/cloudcoin
+%user_home%/skywallet_connect
                   │   config.toml
-                  │   skywallet_connect
-                  ├───logs
-                  └───debit_cards
+                  │   main.log
+                  ├───ID
+                  ├───Bank
+                  ├───Fracked
+                  ├───Counterfeit
+                  └───Sent
 
 ```
 Note: Before you can run the skywallet_connect program on Linux, you must first make it an executable by running: 
