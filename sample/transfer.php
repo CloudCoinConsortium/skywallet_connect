@@ -1,6 +1,6 @@
 <?php
 /*
-Allows you to command your Skywallet send coins to another Skywallet account. 
+Allows you to command your Skywallet transfer your coins to another Skywallet account. 
 
 Open Source
 Free to use with all errors, flaws, bugs etc. 
