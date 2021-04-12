@@ -1,8 +1,8 @@
-# raidaGo
+# SkyWallet_Connect
 
 ![Skywallet](http://raidatech.com/img/skywallet.png)
 
-RAIDA GO Console program allows you to verify that you have received funds in your Skwyallet and to send funds to another Skywallet account from your Skywallet.
+SkyWallet Connect Console program allows you to verify that you have received funds in your Skwyallet and to send funds to another Skywallet account from your Skywallet.
 
 ## Installing skywallet_connect
 
@@ -51,6 +51,8 @@ chmod 100 /usr/local/cloudcoin/logs
 
 [Balance](README.md#balance)
 
+[Verify_Payment](README.md#verify_payment)
+
 ## -version
 example usage:
 ```
@@ -74,7 +76,7 @@ skywallet_connect [-debug] [-log logfile] <operation> <args>
 skywallet_connect [-help]
 skywallet_connect [-version]
 
-<operation> is one of 'view_receipt|transfer|send|show|balance'
+<operation> is one of 'view_receipt|transfer|send|show|balance|verify_payment'
 <args> arguments for operation
 
   -debug
@@ -96,6 +98,7 @@ You can add -help parameter to any specific operation
 ./skywallet_connect -help send
 ./skywallet_connect -help show
 ./skywallet_connect -help balance
+./skywallet_connect -help verify_payment
 ```
 
 ## Config
@@ -179,6 +182,10 @@ Note: These error codes are the same for all commands
 
 ## Transfer:
 
+Transfer command sends CloudCoin from your SkyWallet to a remote skywallet. 
+In order to transfer you need to tell the program amount of CloudCoins, the name of the destination skywallet and the memo.
+You can specify the full path of the ID coin if it is not put in your ID folder.
+
 format: ./skywallet_connect transfer <amount of coins to transfer> <destination_skywallet> <memo> <path to ID coin>
  
 Example:
@@ -188,6 +195,31 @@ $ ./skywallet_connect transfer 2 myfriend.skywallet.cc "my memo" /home/user/my.s
 {"amount_sent":2,"Message":"CloudCoins sent","Status":"success"}
 ```
 
+The transfer may require a change. In this case break_in_bank service will be called transparently to the user.
+
+List of possible errors
+<pre>
+{"status":"error", "message":"Failed to find ID coin, please create a folder called ID in the same folder as your skywallet_connect program. Place one ID coins in that folder"}
+{"status":"error", "message":"Failed to parse ID Coin"}
+{"status":"error", "message":"Failed to generate random string"} // The program failed to generate random hex-string
+{"status":"error", "message":"Failed to convert IP octet1"} // The program failed to convert IP address (four octets xxx.xxx.xxx.xxx) to a serial number
+{"status":"error", "message":"Failed to convert IP octet2"} 
+{"status":"error", "message":"Failed to convert IP octet3"} 
+{"status":"error", "message":"Failed to get SN from IP"} 
+{"status":"error", "message":"Invalid Destination Address"}  // Input parameters validation
+{"status":"error", "message":"Invalid amount"}  // Input parameters validation
+{"status":"error", "message":"Stack File is Corrupted"} 
+{"status":"error", "message":"Not enough coins"}  
+{"status":"error", "message":"Failed to Show Coins"}   // Show service failed
+{"status":"error", "message":"Failed to pick coins"}  // The program can't find neither required amount nor a coin for breaking
+{"status":"error", "message":"Failed to pick coins after change"}  // If change is needed and it is successfull, but the program still can't find coins
+{"status":"error", "message":"Results from the RAIDA are not synchronized"}  
+{"status":"error", "message":"Failed to Encode JSON"}  
+{"status":"error", "message":"Failed to Break Coin: ..."}  
+{"status":"error", "message":"Failed to Transfer: ..."}  
+{"status":"error", "message":"Failed to get Change Method"}  // The program doesn't know how to break coin
+{"status":"error", "message":"ShowChange results are not synchronized"}  // The program can't receive trustworthy results after ShowChange
+</pre>
 
 ## Send
 
@@ -281,4 +313,49 @@ Same Example in Windows:
 ```console
 # C:\xampp\htdocs\cloudcoin\skywallet_connect.exe balance
 {"total":2798}
+```
+
+## Verify Payment
+Verify Payment receipt allows you to verify the payment that someone sent to your Skywallet. You must provide 
+your account name and the GUID the customer has sent you in their memo. Note, the Skywallet point of service (POSJS) software will generate a guid for the customer and they will never see it.  
+
+After verifying a payment the service will try to create a statement on the RAIDA. It this operation fails the verify_payment will return error. One of the reasons create_statement can fail is because of duplicate GUID. You can't verify_payment the same GUID twice.
+
+
+
+```console
+$ ./skywallet_connect verify_payment 080A4CE89126F4F1B93E4745F89F6713 merchant.mydomain.com
+{"amount_verified":100,"status":"success","message":"CloudCoins verified"}
+```
+
+Error Codes:
+Note: These error codes are the same for all commands
+```bash
+1: Incorrect Usage
+2: Could not get serial number from IP Address
+3: ID, Could not open file
+4: ID, Could not read file
+5: ID, Corupted PNG
+6. ID, CloudCoin not found in PNG ID
+7: ID, PNG CRC32 Incorrect
+8: ID, Failed to parse CloudCoin in PNG
+9: ID, Invalid CloudCoin format
+10: Random Number generation failed
+11: The ID Coin not found
+12: The ID directory could not not be read from
+13: Change Method not found
+14: Show Change failed
+15: Break-in-bank change making failed
+16: Insufficient funds to make the transfer
+17: Results from RAIDA were out of sync
+18: Invalid amount specified 
+19: Invalide Skywallet Address
+20: Show Coins failed
+21: Could not pick coins after showing
+22: Cloud not pick coins after change
+23: Failed to encode JSON 
+24: Transfering Coins Failed
+25: Invalid Receipt ID
+26: Invalid Skywallet Owner
+
 ```
