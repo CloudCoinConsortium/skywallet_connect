@@ -53,6 +53,8 @@ chmod 100 /usr/local/cloudcoin/logs
 
 [Balance](README.md#balance)
 
+[Pown](README.md#pown)
+
 [Verify_Payment](README.md#verify_payment)
 
 ## -version
@@ -315,6 +317,16 @@ Same Example in Windows:
 ```console
 # C:\xampp\htdocs\cloudcoin\skywallet_connect.exe balance
 {"total":2798}
+```
+
+## Pown
+
+The command picks PNG and Stack files from the Import folder and Changes their Authenticity Numbers. If some coins are Fracked they will be fixed.
+Each Coin can result in being Authentic, Fracked, Counterfeit or Limbo
+
+```console
+$ ./skywallet_connect pown
+{"amount_authentic":2,"amount_fracked":2,"amount_counterfeit":100,"amount_limbo":0,"amount_total":104}
 ```
 
 ## Verify Payment
