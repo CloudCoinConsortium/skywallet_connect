@@ -26,6 +26,7 @@ type CloudCoin struct {
 	Path     string      `json:"-"`
 	Type     int         `json:"-"`
 	Statuses []int       `json:"-"`
+  PownString string    `json:"pownstring,omitempty"`
 }
 
 type CloudCoinStack struct {
@@ -49,11 +50,35 @@ func NewFromData(Nn, Sn int) *CloudCoin {
 	return &cc
 }
 
+func NewStack(path string) (*CloudCoinStack, *error.Error) {
+	var ccStack *CloudCoinStack
+	var err *error.Error
+	if strings.HasSuffix(path, ".png") {
+		ccStack, err = ReadFromPNGFile(path)
+	} else {
+		ccStack, err = ReadFromFile(path)
+	}
+
+	if err != nil {
+		return nil, &error.Error{config.ERROR_INVALID_CLOUDCOIN_FORMAT, "Failed to parse coin"}
+	}
+
+	if len(ccStack.Stack) == 0 {
+		return nil, &error.Error{config.ERROR_INVALID_CLOUDCOIN_FORMAT, "No Coins in the stack file"}
+	}
+
+  for _, cc := range(ccStack.Stack) {
+    logger.Debug("cc=\n" + string(cc.Sn))
+  	if !ValidateCoin(&cc) {
+	  	logger.Error("Coin is corrupted "  + string(cc.Sn))
+		  return nil, &error.Error{config.ERROR_INVALID_CLOUDCOIN_FORMAT, "Failed to parse coin " + string(cc.Sn)}
+  	}
+  }
+
+  return ccStack, nil
+}
+
 func New(path string) (*CloudCoin, *error.Error) {
-
-	//ans := make([]string, 0)
-	//pans := make([]string, 0)
-
 	var ctype int
 	var ccStack *CloudCoinStack
 	var err *error.Error
@@ -70,8 +95,7 @@ func New(path string) (*CloudCoin, *error.Error) {
 	}
 
 	if len(ccStack.Stack) != 1 {
-		logger.Error("Stack File must contain only one Coin")
-		return nil, &error.Error{config.ERROR_MORE_THAN_ONE_CC, "Failed to parse coin"}
+		return nil, &error.Error{config.ERROR_MORE_THAN_ONE_CC, "Stack file must have only one coin"}
 	}
 
 	cc := ccStack.Stack[0]
@@ -87,6 +111,10 @@ func New(path string) (*CloudCoin, *error.Error) {
 	for idx := 0; idx < config.TOTAL_RAIDA_NUMBER; idx++ {
 		cc.Statuses[idx] = config.RAIDA_STATUS_UNTRIED
 	}
+
+  if (cc.Pans == nil) {
+  	cc.Pans = make([]string, config.TOTAL_RAIDA_NUMBER)
+  }
 
 	return &cc, nil
 }
@@ -124,6 +152,26 @@ func (cc *CloudCoin) SetDetectStatus(idx int, status int) {
 	cc.Statuses[idx] = status
 }
 
+func (cc *CloudCoin) IsAuthentic() (bool, bool, bool) {
+  passed := 0
+  failed := 0
+  for _, status := range(cc.Statuses) {
+    if status == config.RAIDA_STATUS_PASS {
+      passed++
+    } else if status == config.RAIDA_STATUS_FAIL {
+      failed++
+    }
+  }
+
+  isAuthentic := passed >= config.MIN_PASSED_NUM_TO_BE_AUTHENTIC
+  hasFailed := failed > 0
+  isCounterfeit := failed >= config.MAX_FAILED_NUM_TO_BE_COUNTERFEIT
+
+  return isAuthentic, hasFailed, isCounterfeit
+}
+
+
+
 func (cc *CloudCoin) GetPownString() string {
 	pownString := ""
 	for idx, _ := range cc.Statuses {
@@ -144,13 +192,34 @@ func (cc *CloudCoin) GetPownString() string {
 	return pownString
 }
 
+func (cc *CloudCoin) SetPownString() {
+  cc.PownString = cc.GetPownString()
+}
+
 func (cc *CloudCoin) SetAn(idx int, an string) {
 	cc.Ans[idx] = an
+}
+
+func (cc *CloudCoin) GenerateMyPans() {
+	for idx := 0; idx < config.TOTAL_RAIDA_NUMBER; idx++ {
+		cc.Pans[idx], _ = GeneratePan()
+	}
+}
+
+func (cc *CloudCoin) SetAnsToPansIfPassed() {
+	for idx := 0; idx < config.TOTAL_RAIDA_NUMBER; idx++ {
+    if (cc.Statuses[idx] != config.RAIDA_STATUS_PASS) {
+      continue
+    }
+
+		cc.Ans[idx] = cc.Pans[idx]
+	}
 }
 
 func (cc *CloudCoin) GetContent() string {
 	var cstack CloudCoinStack
 
+  cc.SetPownString()
 	cstack.Stack = make([]CloudCoin, 1)
 	cstack.Stack[0] = *cc
 

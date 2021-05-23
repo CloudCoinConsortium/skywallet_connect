@@ -16,14 +16,14 @@ import (
 	"github.com/CloudCoinConsortium/skywallet_connect/internal/raida"
 )
 
-const VERSION = "0.0.12"
+const VERSION = "0.1.2"
 
 func Usage() {
 	fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "%s [-debug] <operation> <args>\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "%s [-help]\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "%s [-version]\n", os.Args[0])
-	fmt.Fprintf(os.Stderr, "\n<operation> is one of 'view_receipt|verify_payment|transfer|send|inventory|balance'\n")
+	fmt.Fprintf(os.Stderr, "\n<operation> is one of 'view_receipt|verify_payment|transfer|send|inventory|balance|pown'\n")
 	fmt.Fprintf(os.Stderr, "<args> arguments for operation\n\n")
 	flag.PrintDefaults()
 }
@@ -161,13 +161,17 @@ func main() {
 			os.Exit(0)
 		}
 		amount, to, memo := flag.Arg(1), flag.Arg(2), flag.Arg(3)
-		if amount == "" || to == "" || memo == "" {
-			core.ShowError(config.ERROR_INCORRECT_USAGE, "Amount, To, Memo parameters required: "+os.Args[0]+" transfer 250 destination.skywallet.cc memo")
+		if amount == "" || to == "" {
+			core.ShowError(config.ERROR_INCORRECT_USAGE, "Amount, To Parameters required: "+os.Args[0]+" transfer 250 destination.skywallet.cc memo")
 		}
+
+    if memo == "" {
+      memo = "SkyWallet Transfer"
+    }
 
 		var cc *cloudcoin.CloudCoin
 		var err *error.Error
-		if flag.NArg() == 4 {
+		if flag.NArg() <= 4 {
 			cc, err = core.GetIDCoin()
 		} else {
 			idcoin := flag.Arg(4)
@@ -201,7 +205,21 @@ func main() {
 			core.ShowError(err.Code, err.Message)
 		}
 		fmt.Println(response)
-	} else if operation == "balance" {
+	} else if operation == "pown" {
+		if config.CmdHelp {
+      fmt.Fprintf(os.Stderr, "Pown command powns coins from the Import Folder\n\n")
+      fmt.Fprintf(os.Stderr, "Usage:\n")
+      fmt.Fprintf(os.Stderr, "pown")
+      os.Exit(0)
+    }
+
+		b := raida.NewPown()
+		response, err := b.Pown()
+		if err != nil {
+			core.ShowError(err.Code, err.Message)
+		}
+		fmt.Println(response)
+  } else if operation == "balance" {
 		if config.CmdHelp {
 			fmt.Fprintf(os.Stderr, "balance command shows your skywallet balance\n\n")
 			fmt.Fprintf(os.Stderr, "Usage:\n")

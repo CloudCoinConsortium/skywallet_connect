@@ -5,7 +5,8 @@ import (
 )
 
 
-var DEFAULT_TIMEOUT = 50
+var DEFAULT_TIMEOUT = 1
+//var DEFAULT_TIMEOUT = 50
 var DEFAULT_DOMAIN = "cloudcoin.global"
 
 
@@ -50,6 +51,10 @@ const DIR_FRACKED = "Fracked"
 const DIR_SENT = "Sent"
 const DIR_COUNTERFEIT = "Counterfeit"
 const DIR_ID = "ID"
+const DIR_IMPORT = "Import"
+const DIR_IMPORTED = "Imported"
+const DIR_SUSPECT = "Suspect"
+const DIR_LIMBO = "Limbo"
 
 
 const TYPE_STACK = 1
@@ -68,8 +73,11 @@ const CHANGE_METHOD_5A = 4
 
 const META_ENV_SEPARATOR = "*"
 
-const MAX_NOTES_TO_SEND = 100
+//const MAX_NOTES_TO_SEND = 100
+const MAX_NOTES_TO_SEND = 3
 
+const MIN_PASSED_NUM_TO_BE_AUTHENTIC = 14
+const MAX_FAILED_NUM_TO_BE_COUNTERFEIT = 12
 
 const ERROR_INCORRECT_USAGE = 1
 const ERROR_GET_SERIAL_NUMBER_FROM_IP = 2
@@ -102,3 +110,4 @@ const ERROR_BREAK_FAILED = 28
 const ERROR_WRITE_FILE = 29
 const ERROR_CONFIG_PARSE = 30
 const ERROR_INVALID_GUID = 31
+const ERROR_COIN_EXISTS = 32

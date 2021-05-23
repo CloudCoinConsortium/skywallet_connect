@@ -2,6 +2,7 @@ package raida
 
 import (
 	"encoding/json"
+	"math"
 	"strconv"
 
 	"github.com/CloudCoinConsortium/skywallet_connect/internal/config"
@@ -11,8 +12,6 @@ import (
 	"github.com/CloudCoinConsortium/skywallet_connect/internal/error"
 
 	"github.com/CloudCoinConsortium/skywallet_connect/internal/cloudcoin"
-	//	"fmt"
-	//	"os"
 )
 
 type Transfer struct {
@@ -40,14 +39,17 @@ func NewTransfer() *Transfer {
 }
 
 func (v *Transfer) Transfer(cc *cloudcoin.CloudCoin, amount string, to string, memo string) (string, *error.Error) {
-	amountInt, err := strconv.Atoi(amount)
-	if err != nil {
+  amountf, ferr := strconv.ParseFloat(amount, 64)
+  if ferr != nil {
 		return "", &error.Error{config.ERROR_INCORRECT_AMOUNT_SPECIFIED, "Invalid amount"}
-	}
+  }
 
+  amountInt := int(math.Round(amountf))
 	if amountInt <= 0 {
 		return "", &error.Error{config.ERROR_INCORRECT_AMOUNT_SPECIFIED, "Invalid amount"}
 	}
+
+  logger.Debug("Trasnfer rounded amount " + strconv.Itoa(amountInt))
 
 	to_sn, err2 := cloudcoin.GuessSNFromString(to)
 	if err2 != nil {

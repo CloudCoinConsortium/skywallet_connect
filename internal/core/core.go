@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/user"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -29,11 +30,97 @@ func GetRootPath() string {
 		path, err := os.Getwd()
 		if err != nil {
 			logger.Error("Failed to find current directory")
-			panic("Failed to find current directory")
-		}
+			panic("Failed to find current didirPath}
 
 		return path
 	*/
+}
+
+
+func GetCoinsForImport() (*[]cloudcoin.CloudCoin, *error.Error) {
+  err := UnpackCoins()
+  if err != nil {
+    return nil, err
+  }
+
+  ccs, err2 := GetCoinsFromSuspect()
+  if err2 != nil {
+    return nil, err2
+  }
+
+  return ccs, nil
+}
+
+func GetCoinsFromSuspect() (*[]cloudcoin.CloudCoin, *error.Error) { 
+  folder := GetRootPath() + Ps() + config.DIR_SUSPECT
+	_, err := os.Stat(folder)
+	if os.IsNotExist(err) {
+		return nil, &error.Error{config.ERROR_READ_DIRECTORY, "Suspect Folder does not exist"}
+	}
+
+	files, err := ioutil.ReadDir(folder)
+	if err != nil {
+		return nil, &error.Error{config.ERROR_READ_DIRECTORY, "Failed to read folder " + folder}
+	}
+
+  ccs := make([]cloudcoin.CloudCoin, 0)
+	for _, f := range files {
+		fname := f.Name()
+    logger.Debug("Reading " + fname)
+    coinPath := folder + Ps() + fname
+    cc, err2 := cloudcoin.New(coinPath)
+    if err2 != nil {
+      continue
+    }
+
+    ccs = append(ccs, *cc)
+  }
+
+  return &ccs, nil
+}
+
+func UnpackCoins() *error.Error {
+  folder := GetRootPath() + Ps() + config.DIR_IMPORT
+	_, err := os.Stat(folder)
+	if os.IsNotExist(err) {
+		return &error.Error{config.ERROR_READ_DIRECTORY, "Import Folder does not exist"}
+	}
+
+	files, err := ioutil.ReadDir(folder)
+	if err != nil {
+		return &error.Error{config.ERROR_READ_DIRECTORY, "Failed to read folder " + folder}
+	}
+
+	for _, f := range files {
+		fname := f.Name()
+		if !strings.HasSuffix(fname, ".stack") && !strings.HasSuffix(fname, ".png") {
+			logger.Debug("Skipping file " + fname)
+			continue
+		}
+
+    logger.Debug("Reading " + fname)
+    stackPath := folder + Ps() + fname
+    ccStack, err2 := cloudcoin.NewStack(stackPath)
+    if err2 != nil {
+      return err2
+    }
+
+    for _, cc := range(ccStack.Stack) {
+      err3 := SaveCoin(cc, config.DIR_SUSPECT)
+      if err3 != nil {
+        if (err3.Code == config.ERROR_COIN_EXISTS) {
+          continue
+        }
+        return err3
+      }
+
+      cc.Path = GetRootPath() + Ps() + config.DIR_SUSPECT + Ps() + cc.GetName()
+    }
+
+    MoveFile(stackPath, GetImportedDir())
+  }
+
+  return nil
 }
 
 func GetSNSFromFolder(folder string) (map[int]string, *error.Error) {
@@ -74,7 +161,6 @@ func GetSNSFromFolder(folder string) (map[int]string, *error.Error) {
 	}
 
 	return sns, nil
-
 }
 
 func CreateFolders() {
@@ -85,7 +171,11 @@ func CreateFolders() {
 	MkDir(rootDir + Ps() + config.DIR_FRACKED)
 	MkDir(rootDir + Ps() + config.DIR_SENT)
 	MkDir(rootDir + Ps() + config.DIR_COUNTERFEIT)
+	MkDir(rootDir + Ps() + config.DIR_LIMBO)
+	MkDir(rootDir + Ps() + config.DIR_IMPORT)
+	MkDir(rootDir + Ps() + config.DIR_IMPORTED)
 	MkDir(rootDir + Ps() + config.DIR_ID)
+	MkDir(rootDir + Ps() + config.DIR_SUSPECT)
 }
 
 func MoveCoinToCounterfeit(cc cloudcoin.CloudCoin) {
@@ -97,8 +187,39 @@ func MoveCoinToCounterfeit(cc cloudcoin.CloudCoin) {
 		logger.Error("Failed to rename: " + err.Error())
 	}
 }
+
 func MoveCoinToSent(cc cloudcoin.CloudCoin) {
 	newPath := GetSentDir() + Ps() + cc.GetName()
+	logger.Debug("Moving " + string(cc.Sn) + " to Sent: " + cc.Path + " to " + newPath)
+
+	err := os.Rename(cc.Path, newPath)
+	if err != nil {
+		logger.Error("Failed to rename: " + err.Error())
+	}
+}
+
+
+
+func MoveFile(oldFile string, dirName string) {
+  newFile := dirName + Ps() + filepath.Base(oldFile)
+  logger.Debug("Moving " + oldFile + " to " + newFile)
+	err := os.Rename(oldFile, newFile)
+	if err != nil {
+		logger.Error("Failed to rename: " + err.Error())
+	}
+}
+
+func MoveCoinToBank(cc cloudcoin.CloudCoin) {
+  MoveCoin(cc, config.DIR_BANK)
+}
+
+func MoveCoinToFracked(cc cloudcoin.CloudCoin) {
+  MoveCoin(cc, config.DIR_FRACKED)
+}
+
+func MoveCoin(cc cloudcoin.CloudCoin, dirName string) {
+	dirPath := GetRootPath() + Ps() + dirName
+	newPath := dirPath + Ps() + cc.GetName()
 	logger.Debug("Moving " + string(cc.Sn) + " to Sent: " + cc.Path + " to " + newPath)
 
 	err := os.Rename(cc.Path, newPath)
@@ -117,8 +238,13 @@ func GetFrackedDir() string {
 func GetCounterfeitDir() string {
 	return GetRootPath() + Ps() + config.DIR_COUNTERFEIT
 }
+
 func GetSentDir() string {
 	return GetRootPath() + Ps() + config.DIR_SENT
+}
+
+func GetImportedDir() string {
+	return GetRootPath() + Ps() + config.DIR_IMPORTED
 }
 
 func GetLogPath() string {
@@ -260,6 +386,45 @@ func SaveToBank(cc cloudcoin.CloudCoin) *error.Error {
 	if err != nil {
 		logger.Error("Failed to write to file: " + string(err.Error()))
 		return &error.Error{config.ERROR_WRITE_FILE, "Failed to write to file: " + string(err.Error())}
+	}
+
+	return nil
+}
+
+func MoveCoinNewContent(cc cloudcoin.CloudCoin, dirName string) *error.Error {
+  oldPath := cc.Path
+
+	cc.Path = GetRootPath() + Ps() + dirName + Ps() + cc.GetName()
+  
+  logger.Debug("old " + oldPath + " new " + cc.Path)
+
+  err := SaveCoin(cc, dirName)
+  if err != nil {
+    return err
+  }
+
+  err2 := os.Remove(oldPath)
+  if err2 != nil {
+    logger.Error("Failed to delete " + oldPath + ": " + err2.Error())
+  }
+
+  return nil
+}
+
+func SaveCoin(cc cloudcoin.CloudCoin, dirPath string) *error.Error {
+	data := []byte(cc.GetContent())
+	fileName := GetRootPath() + Ps() + dirPath + Ps() + cc.GetName()
+
+	logger.Debug("Saving " + fileName)
+	_, err := os.Stat(fileName)
+	if !os.IsNotExist(err) {
+		logger.Error("Failed to save coin " + string(cc.Sn) + ". already exists in " + dirPath)
+		return &error.Error{config.ERROR_COIN_EXISTS, "Coin " + string(cc.Sn) + " exists in " + dirPath}
+	}
+	err2 := ioutil.WriteFile(fileName, data, 0644)
+	if err2 != nil {
+		logger.Error("Failed to write to file: " + string(err2.Error()))
+		return &error.Error{config.ERROR_WRITE_FILE, "Failed to write to file: " + string(err2.Error())}
 	}
 
 	return nil

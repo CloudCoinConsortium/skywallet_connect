@@ -229,6 +229,5 @@ func (v *PaymentVerifier) Verify(uuid string, cc *cloudcoin.CloudCoin) (string, 
 		return "", &error.Error{config.ERROR_ENCODE_JSON, "Failed to Encode JSON"}
 	}
 
-	//fmt.Printf("ns=%d %s isok=%b\n", v.Raida.TotalServers(), pownString, v.IsStatusArrayFixable(pownArray))
 	return string(b), nil
 }
