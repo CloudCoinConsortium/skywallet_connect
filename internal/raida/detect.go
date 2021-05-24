@@ -39,6 +39,7 @@ type DetectOutput struct {
 	AmountLimbo int `json:"amount_limbo"`
 	AmountErrors int `json:"amount_errors"`
 	AmountTotal int `json:"amount_total"`
+  TicketBatches [][]string `json:"-"`
 }
 
 func NewDetect() *Detect {
@@ -47,6 +48,7 @@ func NewDetect() *Detect {
 	}
 }
 
+// (!) The Function will generate PANS and POWN the coins from the Import Folder
 func (v *Detect) Detect() (*DetectOutput, *error.Error) {
 //	if !cloudcoin.ValidateCoin(cc) {
 //		return nil, 0, &error.Error{config.ERROR_INVALID_CLOUDCOIN_FORMAT, "CloudCoin is invalid"}
@@ -83,7 +85,7 @@ func (v *Detect) Detect() (*DetectOutput, *error.Error) {
     locTotal += cc.GetDenomination()
 		bufCcs = append(bufCcs, cc)
 		if len(bufCcs) == config.MAX_NOTES_TO_SEND {
-			do2, err := v.processDetect(bufCcs)
+			do2, err := v.ProcessDetectMove(&bufCcs)
       if err != nil {
         logger.Debug("Error " + err.Message)
         do.AmountErrors += locTotal
@@ -99,7 +101,7 @@ func (v *Detect) Detect() (*DetectOutput, *error.Error) {
 	}
 
 	if len(bufCcs) != 0 {
-		do2, err := v.processDetect(bufCcs)
+		do2, err := v.ProcessDetectMove(&bufCcs)
     if err != nil {
       logger.Debug("Error " + err.Message)
       do.AmountErrors += locTotal
@@ -116,15 +118,13 @@ func (v *Detect) Detect() (*DetectOutput, *error.Error) {
 
 
 
-func (v *Detect) processDetect(ccs []cloudcoin.CloudCoin) (*DetectOutput, *error.Error) {
-  do := &DetectOutput{}
+func (v *Detect) ProcessDetect(ccs *[]cloudcoin.CloudCoin, rlist *[]int) []string {
+  logger.Debug("Detecting " + strconv.Itoa(len(*ccs)))
 
-  logger.Debug("Detecting " + strconv.Itoa(len(ccs)))
-
-	stringSns := make([]string, len(ccs))
-	stringNns := make([]string, len(ccs))
-	stringDns := make([]string, len(ccs))
-	for idx, cc := range ccs {
+	stringSns := make([]string, len(*ccs))
+	stringNns := make([]string, len(*ccs))
+	stringDns := make([]string, len(*ccs))
+	for idx, cc := range *ccs {
 		stringSns[idx] = string(cc.Sn)
 		stringNns[idx] = string(cc.Nn)
 		stringDns[idx] = strconv.Itoa(cc.GetDenomination())
@@ -132,27 +132,44 @@ func (v *Detect) processDetect(ccs []cloudcoin.CloudCoin) (*DetectOutput, *error
 
 	preParams := make([][]string, v.Raida.TotalServers())
 	for ridx, _ := range preParams {
-		preParams[ridx] = make([]string, len(ccs))
-		for idx, cc := range ccs {
+		preParams[ridx] = make([]string, len(*ccs))
+		for idx, cc := range *ccs {
 			preParams[ridx][idx] = string(cc.Ans[ridx])
 		}
 	}
 
 	preParamsPans := make([][]string, v.Raida.TotalServers())
 	for ridx, _ := range preParamsPans {
-		preParamsPans[ridx] = make([]string, len(ccs))
-		for idx, cc := range ccs {
-			preParamsPans[ridx][idx] = string(cc.Pans[ridx])
+		preParamsPans[ridx] = make([]string, len(*ccs))
+		for idx, cc := range *ccs {
+      if (cc.Pans[ridx] == "") {
+  			preParamsPans[ridx][idx] = string(cc.Ans[ridx])
+      } else {
+  			preParamsPans[ridx][idx] = string(cc.Pans[ridx])
+      }
 		}
 	}
 	baSn, _ := json.Marshal(stringSns)
 	baNn, _ := json.Marshal(stringNns)
 	baDn, _ := json.Marshal(stringDns)
 
-
 	pownArray := make([]int, v.Raida.TotalServers())
 	params := make([]map[string]string, v.Raida.TotalServers())
+
 	for idx, _ := range params {
+    // Set only required raida servers
+    if rlist != nil {
+      found := false
+      for _, raidaNeedIdx := range(*rlist) {
+        if (raidaNeedIdx == idx) {
+          found = true
+        }
+      }
+
+      if !found {
+        continue
+      }
+    }
 		baAns, _ := json.Marshal(preParams[idx])
 		baPans, _ := json.Marshal(preParamsPans[idx])
 		params[idx] = make(map[string]string)
@@ -164,50 +181,59 @@ func (v *Detect) processDetect(ccs []cloudcoin.CloudCoin) (*DetectOutput, *error
 		params[idx]["pans[]"] = string(baPans)
 	}
 
+  tickets := make([]string, config.TOTAL_RAIDA_NUMBER)
 	results := v.Raida.SendDefinedRequestPost("/service/multi_detect", params, DetectResponse{})
 	for idx, result := range results {
 		if result.ErrCode == config.REMOTE_RESULT_ERROR_NONE {
 			r := result.Data.(*DetectResponse)
 			if r.Status == "allpass" {
 				pownArray[idx] = config.RAIDA_STATUS_PASS
-				v.SetCoinsStatus(ccs, idx, config.RAIDA_STATUS_PASS)
+				v.SetCoinsStatus(*ccs, idx, config.RAIDA_STATUS_PASS)
+        tickets[idx] = r.Ticket
 			} else if r.Status == "allfail" {
 				pownArray[idx] = config.RAIDA_STATUS_FAIL
-				v.SetCoinsStatus(ccs, idx, config.RAIDA_STATUS_FAIL)
+				v.SetCoinsStatus(*ccs, idx, config.RAIDA_STATUS_FAIL)
 			} else if r.Status == "mixed" {
 				ss := strings.Split(r.Message, ",")
-				if len(ss) != len(ccs) {
-					logger.Error("Invalid length returned from raida: " + string(len(ss)) + ", expected: " + string(len(ccs)))
-					v.SetCoinsStatus(ccs, idx, config.RAIDA_STATUS_ERROR)
+        tickets[idx] = r.Ticket
+				if len(ss) != len(*ccs) {
+					logger.Error("Invalid length returned from raida: " + string(len(ss)) + ", expected: " + string(len(*ccs)))
+					v.SetCoinsStatus(*ccs, idx, config.RAIDA_STATUS_ERROR)
 				} else {
 					for aIdx, status := range ss {
 						logger.Debug("sn=" + status)
 
 						if status == "pass" {
-							v.SetCoinStatusInArray(ccs, aIdx, idx, config.RAIDA_STATUS_PASS)
+							v.SetCoinStatusInArray(*ccs, aIdx, idx, config.RAIDA_STATUS_PASS)
 						} else if status == "fail" {
-							v.SetCoinStatusInArray(ccs, aIdx, idx, config.RAIDA_STATUS_FAIL)
+							v.SetCoinStatusInArray(*ccs, aIdx, idx, config.RAIDA_STATUS_FAIL)
 							// addCoinTorarr
 						} else {
-							v.SetCoinStatusInArray(ccs, aIdx, idx, config.RAIDA_STATUS_ERROR)
+							v.SetCoinStatusInArray(*ccs, aIdx, idx, config.RAIDA_STATUS_ERROR)
 						}
 					}
 
 				}
 			} else {
 				pownArray[idx] = config.RAIDA_STATUS_ERROR
-				v.SetCoinsStatus(ccs, idx, config.RAIDA_STATUS_ERROR)
+				v.SetCoinsStatus(*ccs, idx, config.RAIDA_STATUS_ERROR)
 			}
 		} else if result.ErrCode == config.REMOTE_RESULT_ERROR_TIMEOUT {
 			pownArray[idx] = config.RAIDA_STATUS_NORESPONSE
-			v.SetCoinsStatus(ccs, idx, config.RAIDA_STATUS_NORESPONSE)
+			v.SetCoinsStatus(*ccs, idx, config.RAIDA_STATUS_NORESPONSE)
 		} else {
 			pownArray[idx] = config.RAIDA_STATUS_ERROR
-			v.SetCoinsStatus(ccs, idx, config.RAIDA_STATUS_ERROR)
+			v.SetCoinsStatus(*ccs, idx, config.RAIDA_STATUS_ERROR)
 		}
 	}
 
-	for _, cc := range ccs {
+  return tickets
+}
+
+func (v *Detect) ProcessDetectMove(ccs *[]cloudcoin.CloudCoin) (*DetectOutput, *error.Error) {
+  tickets := v.ProcessDetect(ccs, nil)
+  do := &DetectOutput{}
+	for _, cc := range *ccs {
     cc.SetAnsToPansIfPassed()
 		logger.Debug("cc " + string(cc.Sn) + " pownstring " + cc.GetPownString())
     isAuthentic, hasFailed, isCounterfeit := cc.IsAuthentic()
@@ -233,6 +259,9 @@ func (v *Detect) processDetect(ccs []cloudcoin.CloudCoin) (*DetectOutput, *error
       }
 		}
 	}
+
+  do.TicketBatches = make([][]string, 1)
+  do.TicketBatches[0] = tickets
 
   return do, nil
 }

@@ -51,11 +51,21 @@ func GetCoinsForImport() (*[]cloudcoin.CloudCoin, *error.Error) {
   return ccs, nil
 }
 
+
+
 func GetCoinsFromSuspect() (*[]cloudcoin.CloudCoin, *error.Error) { 
-  folder := GetRootPath() + Ps() + config.DIR_SUSPECT
+  return GetCoinsFromFolder(config.DIR_SUSPECT)
+}
+
+func GetCoinsFromFracked() (*[]cloudcoin.CloudCoin, *error.Error) { 
+  return GetCoinsFromFolder(config.DIR_FRACKED)
+}
+
+func GetCoinsFromFolder(folderName string) (*[]cloudcoin.CloudCoin, *error.Error) { 
+  folder := GetRootPath() + Ps() + folderName
 	_, err := os.Stat(folder)
 	if os.IsNotExist(err) {
-		return nil, &error.Error{config.ERROR_READ_DIRECTORY, "Suspect Folder does not exist"}
+		return nil, &error.Error{config.ERROR_READ_DIRECTORY, folderName + " Folder does not exist"}
 	}
 
 	files, err := ioutil.ReadDir(folder)
@@ -407,6 +417,28 @@ func MoveCoinNewContent(cc cloudcoin.CloudCoin, dirName string) *error.Error {
   if err2 != nil {
     logger.Error("Failed to delete " + oldPath + ": " + err2.Error())
   }
+
+  return nil
+}
+
+func UpdateCoin(cc cloudcoin.CloudCoin) *error.Error {
+  dirPath := filepath.Base(filepath.Dir(cc.Path))
+
+  tmpPath := cc.Path + ".tmp"
+
+  err := os.Rename(cc.Path, tmpPath)
+  if err != nil {
+    logger.Error("Failed to rename " + cc.Path + " to " + tmpPath + ": " + string(err.Error()))
+    return &error.Error{config.ERROR_OPEN_FILE, "Failed to rename coin"}
+  }
+
+  err2 := SaveCoin(cc, dirPath)
+  if err2 != nil {
+    logger.Error("Failed to save coin: " + string(err2.Error()))
+    return err2
+  }
+
+  os.Remove(tmpPath)
 
   return nil
 }

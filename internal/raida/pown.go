@@ -2,6 +2,7 @@ package raida
 
 import (
 	"encoding/json"
+	"strconv"
 
 	"github.com/CloudCoinConsortium/skywallet_connect/internal/config"
 	"github.com/CloudCoinConsortium/skywallet_connect/internal/logger"
@@ -60,8 +61,9 @@ func (v *Pown) Pown() (string, *error.Error) {
     logger.Error("Failed to fix")
   }
 
-  po.AmountFracked -= fresponse.AmountFixed
-  po.AmountAuthentic += fresponse.AmountFixed
+  logger.Debug("Fracked: " + strconv.Itoa(fresponse.AmountFracked) + ", Fixed: " + strconv.Itoa(fresponse.AmountFixed))
+  //po.AmountFracked -= fresponse.AmountFixed
+  //po.AmountAuthentic += fresponse.AmountFixed
 
 	b, err2 := json.Marshal(po)
 	if err2 != nil {

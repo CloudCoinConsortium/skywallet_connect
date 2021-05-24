@@ -44,6 +44,8 @@ const (
 	RAIDA_STATUS_NORESPONSE = 4
 )
 
+const FIX_MAX_REGEXPS = 56
+
 
 const TOPDIR = "skywallet_connect_home"
 const DIR_BANK = "Bank"
@@ -111,3 +113,5 @@ const ERROR_WRITE_FILE = 29
 const ERROR_CONFIG_PARSE = 30
 const ERROR_INVALID_GUID = 31
 const ERROR_COIN_EXISTS = 32
+const ERROR_INTERNAL = 33
+const ERROR_TICKETS_FAILED = 34

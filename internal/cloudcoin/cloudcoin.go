@@ -116,6 +116,8 @@ func New(path string) (*CloudCoin, *error.Error) {
   	cc.Pans = make([]string, config.TOTAL_RAIDA_NUMBER)
   }
 
+  cc.SetStatusesFromPownString()
+
 	return &cc, nil
 }
 
@@ -126,6 +128,35 @@ func (cc *CloudCoin) GetDenomination() int {
 	}
 
 	return GetDenomination(snInt)
+}
+
+func (cc *CloudCoin) SetStatusesFromPownString() {
+  if (cc.PownString == "") {
+    return
+  }
+
+  if (len(cc.PownString) != config.TOTAL_RAIDA_NUMBER) {
+    return
+  }
+
+  for idx, c := range(cc.PownString) {
+    fmt.Printf("cr=%c\n",c)
+    status := config.RAIDA_STATUS_UNTRIED
+    switch c {
+    case 'p':
+      status = config.RAIDA_STATUS_PASS
+    case 'e':
+      status = config.RAIDA_STATUS_ERROR
+    case 'u':
+      status = config.RAIDA_STATUS_UNTRIED
+    case 'n':
+      status = config.RAIDA_STATUS_NORESPONSE
+    case 'f':
+      status = config.RAIDA_STATUS_FAIL
+    }
+
+    cc.SetDetectStatus(idx, status)
+  }
 }
 
 func (cc *CloudCoin) GetFileName() string {
