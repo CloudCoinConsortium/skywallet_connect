@@ -16,7 +16,7 @@ import (
 	"github.com/CloudCoinConsortium/skywallet_connect/internal/raida"
 )
 
-const VERSION = "0.1.2"
+const VERSION = "0.1.3"
 
 func Usage() {
 	fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])

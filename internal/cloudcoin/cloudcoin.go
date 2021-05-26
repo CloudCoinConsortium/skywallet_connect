@@ -140,7 +140,6 @@ func (cc *CloudCoin) SetStatusesFromPownString() {
   }
 
   for idx, c := range(cc.PownString) {
-    fmt.Printf("cr=%c\n",c)
     status := config.RAIDA_STATUS_UNTRIED
     switch c {
     case 'p':

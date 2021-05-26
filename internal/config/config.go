@@ -5,8 +5,8 @@ import (
 )
 
 
-var DEFAULT_TIMEOUT = 1
-//var DEFAULT_TIMEOUT = 50
+//var DEFAULT_TIMEOUT = 1
+var DEFAULT_TIMEOUT = 50
 var DEFAULT_DOMAIN = "cloudcoin.global"
 
 
@@ -75,8 +75,8 @@ const CHANGE_METHOD_5A = 4
 
 const META_ENV_SEPARATOR = "*"
 
-//const MAX_NOTES_TO_SEND = 100
-const MAX_NOTES_TO_SEND = 3
+const MAX_NOTES_TO_SEND = 100
+//const MAX_NOTES_TO_SEND = 3
 
 const MIN_PASSED_NUM_TO_BE_AUTHENTIC = 14
 const MAX_FAILED_NUM_TO_BE_COUNTERFEIT = 12
