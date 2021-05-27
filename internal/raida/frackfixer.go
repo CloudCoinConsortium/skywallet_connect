@@ -62,27 +62,70 @@ func (v *FrackFixer) Fix() (*FrackFixerOutput, *error.Error) {
     return nil, err
   }
 
-  ccs, err2 := core.GetCoinsFromFracked()
+  allccs, err2 := core.GetCoinsFromFracked()
   if err2 != nil {
     return nil, err
   }
 
-  if len(*ccs) == 0 {
+  if len(*allccs) == 0 {
     return fo, nil
   }
 
-	for _, cc := range(*ccs) {
+  var ccs, superfixCcs []cloudcoin.CloudCoin
+
+ml:
+	for _, cc := range(*allccs) {
     fo.AmountFracked += cc.GetDenomination()
+
+    f := 0
+    for _, status := range(cc.Statuses) {
+      if status == config.RAIDA_STATUS_FAIL {
+        f++
+        if f == 5 {
+          superfixCcs = append(superfixCcs, cc)
+          continue ml
+        }
+      }
+    }
+
+    ccs = append(ccs, cc)
   }
 
 	var bufCcs []cloudcoin.CloudCoin
 
+  // SuperFix
+  for i := 0; i < config.TOTAL_RAIDA_NUMBER; i++ {
+    bufCcs = nil
+    for _, cc := range(superfixCcs) {
+      if (cc.Statuses[i] != config.RAIDA_STATUS_FAIL) {
+        continue
+      }
+
+      logger.Debug("CC " + string(cc.Sn) + " will be superfixed on r" + strconv.Itoa(i))
+      bufCcs = append(bufCcs, cc)
+      if len(bufCcs) == config.MAX_NOTES_TO_SEND {
+        err := v.ProcessSuperFix(i, &bufCcs)
+        if err != nil {
+          logger.Debug("Error " + err.Message)
+        }
+        bufCcs = nil
+      }
+    }
+
+    if len(bufCcs) != 0 {
+      err := v.ProcessSuperFix(i, &bufCcs)
+      if err != nil {
+        logger.Debug("Error " + err.Message)
+      }
+    }
+  }
+
   // Round 1
-  logger.Debug("Round 1. Total Coins: " + strconv.Itoa(len(*ccs)))
+  logger.Debug("Round 1. Total Coins: " + strconv.Itoa(len(ccs)))
   for i := 0; i < config.TOTAL_RAIDA_NUMBER; i++ {
     bufCcs = nil
 
-    for _, cc := range(*ccs) {
+    for _, cc := range(ccs) {
       if (cc.Statuses[i] != config.RAIDA_STATUS_FAIL) {
         continue
       }
@@ -107,11 +150,11 @@ func (v *FrackFixer) Fix() (*FrackFixerOutput, *error.Error) {
   }
 
   // Round 2
-  logger.Debug("Round 2. Total Coins: " + strconv.Itoa(len(*ccs)))
+  logger.Debug("Round 2. Total Coins: " + strconv.Itoa(len(ccs)))
   for i := config.TOTAL_RAIDA_NUMBER - 1; i >= 0; i-- {
     bufCcs = nil
 
-    for _, cc := range(*ccs) {
+    for _, cc := range(ccs) {
       if (cc.Statuses[i] != config.RAIDA_STATUS_FAIL) {
         continue
       }
@@ -136,7 +179,7 @@ func (v *FrackFixer) Fix() (*FrackFixerOutput, *error.Error) {
   }
 
 
-  for _, cc := range(*ccs) {
+  for _, cc := range(*allccs) {
     cc.SetPownString()
     _, hasFailed, _ := cc.IsAuthentic()
     if (hasFailed) {
@@ -152,6 +195,119 @@ func (v *FrackFixer) Fix() (*FrackFixerOutput, *error.Error) {
 }
 
 
+func (v *FrackFixer) ProcessSuperFix(rIdx int, ccs *[]cloudcoin.CloudCoin) *error.Error {
+  logger.Debug("SuperFixing " + strconv.Itoa(len(*ccs)) + " coins on raida " + strconv.Itoa(rIdx))
+
+  if v.networkFailedRaidas[rIdx] {
+    logger.Debug("raida" + strconv.Itoa(rIdx) + " network is failed. Skipping")
+    return nil
+  }
+
+  tickets, err := v.ReceiveTickets(rIdx, ccs, nil)
+  if err != nil {
+    logger.Debug("Failed to Get Tickets")
+    return nil
+  }
+
+  fixed := v.ProcessSuperFixWithTickets(rIdx, ccs, tickets)
+  if fixed {
+    logger.Debug("Fixed Successfully")
+    for _, cc := range(*ccs) {
+      core.UpdateCoin(cc)
+    }
+  }
+
+  return nil
+}
+
+func (v *FrackFixer) ProcessSuperFixWithTickets(rIdx int, ccs *[]cloudcoin.CloudCoin, tickets []string) bool {
+  pan, _ := cloudcoin.GeneratePan()
+  logger.Debug("Generated Pan " + pan)
+
+  if (len(tickets) != config.TOTAL_RAIDA_NUMBER) {
+    logger.Debug("Tickets invalid size: " + string(len(tickets)))
+  }
+
+	stringSns := make([]string, len(*ccs))
+	stringPans := make([]string, len(*ccs))
+	stringRs := make([]string, config.TOTAL_RAIDA_NUMBER)
+	for idx, cc := range *ccs {
+		stringSns[idx] = string(cc.Sn)
+		stringPans[idx] = pan
+  }
+
+  for i := 0; i < len(tickets); i++ {
+    if (tickets[i] == "") {
+      stringRs[i] = "false"
+    } else {
+      stringRs[i] = tickets[i]
+    }
+  }
+
+	//pownArray := make([]int, v.Raida.TotalServers())
+	params := make([]map[string]string, v.Raida.TotalServers())
+
+	baSn, _ := json.Marshal(stringSns)
+	baPan, _ := json.Marshal(stringPans)
+	baR, _ := json.Marshal(stringRs)
+
+  params[rIdx] = make(map[string]string)
+  params[rIdx]["r[]"] = string(baR)
+  params[rIdx]["pan[]"] = string(baPan)
+	params[rIdx]["sn[]"] = string(baSn)
+	results := v.Raida.SendDefinedRequest("/service/super_fix", params, FrackFixerResponse{})
+  result := results[rIdx]
+	if result.ErrCode == config.REMOTE_RESULT_ERROR_NONE {
+	  r := result.Data.(*FrackFixerResponse)
+		if r.Status == "allpass" {
+      logger.Debug("All fixed")
+      for _, cc := range(*ccs) {
+        cc.Ans[rIdx] = pan
+        cc.SetDetectStatus(rIdx, config.RAIDA_STATUS_PASS)
+      }
+      return true
+		} else if r.Status == "allfail" {
+      logger.Debug("All failed")
+      return false
+		} else if r.Status == "mixed" {
+				ss := strings.Split(r.Message, ",")
+
+        // +1 is a bug workaround on Raida Backend
+				if len(ss) != len(*ccs) && len(ss) != len(*ccs) + 1 {
+					logger.Error("Invalid length returned from raida: " + string(len(ss)) + ", expected: " + string(len(*ccs)))
+          v.networkFailedRaidas[rIdx] = true
+          return false
+				} 
+        
+				for aIdx, status := range ss {
+          if (aIdx >= len(*ccs)) {
+            continue
+          }
+					logger.Debug("sn=" + status)
+					if status == "pass" {
+            logger.Debug("sn " + string((*ccs)[aIdx].Sn) + " passed")
+            (*ccs)[aIdx].Ans[rIdx] = pan
+            (*ccs)[aIdx].SetDetectStatus(rIdx, config.RAIDA_STATUS_PASS)
+					} else {
+            logger.Debug("sn " + string((*ccs)[aIdx].Sn) + " failed")
+          }
+				}
+
+        return true
+		} else {
+      logger.Debug("Raida " + strconv.Itoa(rIdx) + " network timeout")
+      v.networkFailedRaidas[rIdx] = true
+		}
+	} else if result.ErrCode == config.REMOTE_RESULT_ERROR_TIMEOUT {
+    logger.Debug("Raida " + strconv.Itoa(rIdx) + " network timeout")
+    v.networkFailedRaidas[rIdx] = true
+	} else {
+    logger.Debug("Raida " + strconv.Itoa(rIdx) + " error")
+    v.networkFailedRaidas[rIdx] = true
+	}
+
+  return false
+}
 
 func (v *FrackFixer) ProcessFix(rIdx int, ccs *[]cloudcoin.CloudCoin) *error.Error {
   logger.Debug("Fixing " + strconv.Itoa(len(*ccs)) + " coins on raida " + strconv.Itoa(rIdx))
@@ -207,22 +363,10 @@ func (v *FrackFixer) GetRegexString(fivetouches [5]int) string {
   return string(rxstr[:])
 }
 
-func (v *FrackFixer) ReceiveTickets(rIdx int, ccs *[]cloudcoin.CloudCoin, corner int) ([]string, *error.Error) {
-  var neighbours []int
+func (v *FrackFixer) ReceiveTickets(rIdx int, ccs *[]cloudcoin.CloudCoin, neighbours *[]int) ([]string, *error.Error) {
 
   logger.Debug("Getting tickets for raida" + strconv.Itoa(rIdx))
 
-  fivetouches := v.trustedTriads[rIdx][corner]
-
-  for _, idx := range(fivetouches) {
-    nIdx := v.trustedServers[rIdx][idx]
-
-    if v.failedRaidas[nIdx] || v.networkFailedRaidas[nIdx] {
-      logger.Debug("Raida " + strconv.Itoa(nIdx) + " is marked failed. giving up")
-      return nil, &error.Error{config.ERROR_TICKETS_FAILED, "Marked Failed raida" + strconv.Itoa(nIdx)} 
-    }
-    neighbours = append(neighbours, nIdx)
-  }
 
   detect := NewDetect()
 
@@ -234,10 +378,23 @@ func (v *FrackFixer) ReceiveTickets(rIdx int, ccs *[]cloudcoin.CloudCoin, corner
     nccs[idx].Ans = cc.Ans
   }
 
-  tickets := detect.ProcessDetect(&nccs, &neighbours)
+  tickets := detect.ProcessDetect(&nccs, neighbours)
+
+  var np []int
+  if neighbours == nil {
+    n := make([]int, config.TOTAL_RAIDA_NUMBER)
+    for i := 0; i < len(n); i++ {
+      n[i] = i
+    }
+    np = n
+  } else {
+    np = *neighbours
+  }
+
+  errors := 0
 
   rtickets := []string{}
-  for _, ridx := range(neighbours) {
+  for _, ridx := range(np) {
     ticket := tickets[ridx]
     if ticket == "" {
       logger.Debug("Failed to get ticket for raida" + strconv.Itoa(ridx))
@@ -248,7 +405,15 @@ func (v *FrackFixer) ReceiveTickets(rIdx int, ccs *[]cloudcoin.CloudCoin, corner
         logger.Debug("Network error raida" + strconv.Itoa(ridx))
         v.networkFailedRaidas[ridx] = true
       }
-      return nil, &error.Error{config.ERROR_TICKETS_FAILED, "Failed to Get Tickets for raida" + strconv.Itoa(ridx)} 
+
+      if (neighbours != nil) {
+        return nil, &error.Error{config.ERROR_TICKETS_FAILED, "Failed to Get Tickets for raida" + strconv.Itoa(ridx)} 
+      }
+
+      errors++
+      if errors > config.TOTAL_RAIDA_NUMBER / 2 {
+        return nil, &error.Error{config.ERROR_TICKETS_FAILED, "Failed to Get Tickets for raida" + strconv.Itoa(ridx)} 
+      }
     }
 
     rtickets = append(rtickets, tickets[ridx])
@@ -257,6 +422,8 @@ func (v *FrackFixer) ReceiveTickets(rIdx int, ccs *[]cloudcoin.CloudCoin, corner
   return rtickets, nil
  // return nil, &error.Error{config.ERROR_TICKETS_FAILED, "Failed to Get Tickets"} 
 }
+
+
 func (v *FrackFixer) ProcessFixInCornerWithTickets(rIdx int, ccs *[]cloudcoin.CloudCoin, corner int, tickets []string, regex string) bool {
   if v.networkFailedRaidas[rIdx] {
     logger.Debug("raida" + strconv.Itoa(rIdx) + " network is failed. Skipping")
@@ -336,25 +503,8 @@ func (v *FrackFixer) ProcessFixInCornerWithTickets(rIdx int, ccs *[]cloudcoin.Cl
     logger.Debug("Raida " + strconv.Itoa(rIdx) + " error")
     v.networkFailedRaidas[rIdx] = true
 	}
+
   return false
-	/*for idx, result := range results {
-	}
-  */
-
-
-/*
-  for _, cc := range(*ccs) {
-    cc.Ans[rIdx] = pan
-  }
-
-  for _, cc := range(*ccs) {
-    fmt.Printf("new pan %s\n", cc.Ans[rIdx])
-  }
-*/
-
-  
-
-  return true
 }
 
 func (v *FrackFixer) ProcessFixInCorner(rIdx int, ccs *[]cloudcoin.CloudCoin, corner int) (bool, *error.Error) {
@@ -381,7 +531,18 @@ func (v *FrackFixer) ProcessFixInCorner(rIdx int, ccs *[]cloudcoin.CloudCoin, co
 
   logger.Debug("corner " + strconv.Itoa(corner) + " (" + strconv.Itoa(aIdx) + ","     + strconv.Itoa(bIdx) + "," + strconv.Itoa(cIdx) + "," + strconv.Itoa(dIdx) + "," + strconv.Itoa(eIdx) + ")")
 
-  tickets, err := v.ReceiveTickets(rIdx, ccs, corner)
+  var neighbours []int
+  for _, idx := range(fivetouches) {
+    nIdx := v.trustedServers[rIdx][idx]
+
+    if v.failedRaidas[nIdx] || v.networkFailedRaidas[nIdx] {
+      logger.Debug("Raida " + strconv.Itoa(nIdx) + " is marked failed. giving up")
+      return false, nil
+    }
+    neighbours = append(neighbours, nIdx)
+  }
+
+  tickets, err := v.ReceiveTickets(rIdx, ccs, &neighbours)
   if err != nil {
     logger.Debug("Failed to Get Tickets")
     return false, nil
