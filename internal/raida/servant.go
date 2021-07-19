@@ -480,6 +480,10 @@ func (s *Servant) GetObjectMemo(guid string, memo string, amount string, from st
 	var tags []string
 
 	tags = make([]string, s.Raida.TotalServers())
+	if guid == "" {
+		guid, _ = cloudcoin.GeneratePan()
+		logger.Debug("Generated GUID " + guid)
+	}
 	d := s.GetStripesMirrorsForObjectMemo(guid, memo, amount, from)
 
 	ms := config.META_ENV_SEPARATOR
@@ -503,7 +507,7 @@ func (s *Servant) GetStripesMirrorsForObjectMemo(guid string, memo string, amoun
 	sb += "guid=" + guid + "\n"
 	sb += "from=" + from + "\n"
 	sb += "amount=" + amount + "\n"
-	sb += "dsecription=From RaidaGo\n"
+	sb += "description=From RaidaGo\n"
 
 	str := base64.StdEncoding.EncodeToString([]byte(sb))
 	d := s.SplitMessage(str)
