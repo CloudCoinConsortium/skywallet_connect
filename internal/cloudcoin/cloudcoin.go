@@ -169,6 +169,11 @@ func (cc *CloudCoin) GetFileName() string {
 		base = re.ReplaceAllString(base, "$1")
 	}
 
+  if cc.Type == config.TYPE_STACK {
+		re := regexp.MustCompile(`(.+)\.stack$`)
+		base = re.ReplaceAllString(base, "$1")
+  }
+
 	return base
 }
 

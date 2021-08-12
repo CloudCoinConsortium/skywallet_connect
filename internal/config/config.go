@@ -10,6 +10,9 @@ var DEFAULT_TIMEOUT = 50
 var DEFAULT_DOMAIN = "cloudcoin.global"
 
 
+// Timeout to wait for Pay() hook
+const INFO_HTTP_TIMEOUT = 10
+
 const LOG_LEVEL_DEBUG = 3
 const LOG_LEVEL_INFO = 2
 const LOG_LEVEL_ERROR = 1
@@ -115,3 +118,7 @@ const ERROR_INVALID_GUID = 31
 const ERROR_COIN_EXISTS = 32
 const ERROR_INTERNAL = 33
 const ERROR_TICKETS_FAILED = 34
+const ERROR_COINS_SENT_BUT_INFO_REQUESTS_FAILED = 35
+const ERROR_DNS = 36
+const ERROR_INVALID_URL = 37
+const ERROR_HTTP = 38

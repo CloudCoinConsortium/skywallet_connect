@@ -23,7 +23,7 @@ func Usage() {
 	fmt.Fprintf(os.Stderr, "%s [-debug] <operation> <args>\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "%s [-help]\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "%s [-version]\n", os.Args[0])
-	fmt.Fprintf(os.Stderr, "\n<operation> is one of 'view_receipt|verify_payment|transfer|send|inventory|balance|pown'\n")
+	fmt.Fprintf(os.Stderr, "\n<operation> is one of 'view_receipt|verify_payment|transfer|send|inventory|balance|pay|pown'\n")
 	fmt.Fprintf(os.Stderr, "<args> arguments for operation\n\n")
 	flag.PrintDefaults()
 }
@@ -244,7 +244,46 @@ func main() {
 			core.ShowError(err.Code, err.Message)
 		}
 		fmt.Println(response)
-	} else {
+	} else if operation == "pay" {
+		if config.CmdHelp {
+			fmt.Fprintf(os.Stderr, "pay command transfers coins from a skywallet to another skywallet and informs the merchant by sending a HTTP request to it\n\n")
+			fmt.Fprintf(os.Stderr, "Usage:\n")
+			fmt.Fprintf(os.Stderr, "%s [-debug] transfer <amount> <destination skywallet> <memo> [<idcoin>]\n\n", os.Args[0])
+			fmt.Fprintf(os.Stderr, "<amount> - amount to transfer\n")
+			fmt.Fprintf(os.Stderr, "<guid> - GUID of the transaction\n")
+			fmt.Fprintf(os.Stderr, "<destination skywallet> - serial number, ip address, or skywallet address of the Merchant's skywallet\n")
+			fmt.Fprintf(os.Stderr, "<memo> - memo\n\n")
+			fmt.Fprintf(os.Stderr, "<idcoin> - full path to the ID coin. If not defined it will be taken from the ID folder\n\n")
+			fmt.Fprintf(os.Stderr, "Example:\n")
+			fmt.Fprintf(os.Stderr, "%s pay 10 cc1481595900c736662a6dc40061fdbd payments.raidamail.com \"account1\" /home/user/my.skywallet.cc.stack\n", os.Args[0])
+			os.Exit(0)
+		}
+
+		amount, guid, to, memo := flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4)
+		if amount == "" || to == "" || memo == "" || guid == "" {
+			core.ShowError(config.ERROR_INCORRECT_USAGE, "Amount, To, GUID, Memo Parameters required: "+os.Args[0]+" pay 250 cc1481595900c736662a6dc40061fdbd payments.raidamail.com \"account1\" ")
+		}
+
+		var cc *cloudcoin.CloudCoin
+		var err *error.Error
+		if flag.NArg() <= 5 {
+			cc, err = core.GetIDCoin()
+		} else {
+			idcoin := flag.Arg(5)
+			cc, err = core.GetIDCoinFromPath(idcoin)
+		}
+		if err != nil {
+			core.ShowError(err.Code, err.Message)
+		}
+
+		t := raida.NewTransfer()
+		response, err := t.Pay(cc, amount, guid, to, memo)
+		if err != nil {
+			core.ShowError(err.Code, err.Message)
+		}
+		fmt.Println(response)
+  
+  } else {
 
 		core.ShowError(config.ERROR_INCORRECT_USAGE, "Invalid command")
 	}
