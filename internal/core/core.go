@@ -368,7 +368,7 @@ func GetIDCoin() (*cloudcoin.CloudCoin, *error.Error) {
 }
 
 func JsonError(code int, txt string) string {
-	var str = fmt.Sprintf("{\"status\":\"fail\", \"code\":%d \"message\":\"%s\", \"time\":\"%s\"}", code, txt, time.Since(time.Now()))
+	var str = fmt.Sprintf("{\"Status\":\"fail\", \"Code\":%d, \"Message\":\"%s\", \"Time\":\"%s\"}", code, txt, time.Since(time.Now()))
 
 	return str
 }
