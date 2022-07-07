@@ -2,6 +2,8 @@ package raida
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/CloudCoinConsortium/skywallet_connect/internal/config"
@@ -51,6 +53,9 @@ func (v *BreakInBank) BreakInBank(cc *cloudcoin.CloudCoin, snToBreak int) ([]int
 		logger.Error("Failed to ShowChange")
 		return nil, err
 	}
+
+  fmt.Printf("xxx=%v\n",sns)
+  os.Exit(1)
 
 	stringSns := make([]string, len(sns))
 	for idx, ssn := range sns {

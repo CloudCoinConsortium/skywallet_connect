@@ -285,6 +285,7 @@ func MkDir(path string) {
 }
 
 func GetIDCoinFromPath(idpath string) (*cloudcoin.CloudCoin, *error.Error) {
+  logger.Debug("idp " + idpath)
 	_, err := os.Stat(idpath)
 	if os.IsNotExist(err) {
 		return nil, &error.Error{config.ERROR_ID_COIN_MISSING, "Failed to find ID coin"}

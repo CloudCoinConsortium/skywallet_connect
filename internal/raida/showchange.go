@@ -1,6 +1,7 @@
 package raida
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/CloudCoinConsortium/skywallet_connect/internal/config"
@@ -143,6 +144,7 @@ func (v *ShowChange) ShowChange(cm, snToBreak int) ([]int, *error.Error) {
 	csns25, _ := v.GetSNsOverlap(rsns25)
 	csns100, _ := v.GetSNsOverlap(rsns100)
 
+  fmt.Printf("v=%v\n", csns25)
 	var sns []int
 
 	switch cm {
